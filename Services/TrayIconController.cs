@@ -5,15 +5,18 @@ namespace WinUtil.Services;
 
 internal sealed class TrayIconController : IDisposable
 {
+    private const int WarningDisplayDurationMilliseconds = 5000;
+
     private readonly ContextMenuStrip contextMenu;
     private readonly NotifyIcon notificationIcon;
     private readonly Icon trayIcon;
     private bool disposed;
 
-    internal TrayIconController(Action showWidget, Action exitApplication)
+    internal TrayIconController(Action showWidget, Action showSettings, Action exitApplication)
     {
         contextMenu = new ContextMenuStrip();
         contextMenu.Items.Add("Show widget", null, (_, _) => showWidget());
+        contextMenu.Items.Add("Settings", null, (_, _) => showSettings());
         contextMenu.Items.Add(new ToolStripSeparator());
         contextMenu.Items.Add("Exit", null, (_, _) => exitApplication());
 
@@ -42,6 +45,9 @@ internal sealed class TrayIconController : IDisposable
         contextMenu.Dispose();
         disposed = true;
     }
+
+    internal void ShowWarning(string title, string message) =>
+        notificationIcon.ShowBalloonTip(WarningDisplayDurationMilliseconds, title, message, ToolTipIcon.Warning);
 
     private void HandleDoubleClick(object? sender, EventArgs e)
     {
