@@ -1,0 +1,50 @@
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace WinUtil.Services;
+
+internal sealed class TrayIconController : IDisposable
+{
+    private readonly ContextMenuStrip contextMenu;
+    private readonly NotifyIcon notificationIcon;
+    private readonly Icon trayIcon;
+    private bool disposed;
+
+    internal TrayIconController(Action showWidget, Action exitApplication)
+    {
+        contextMenu = new ContextMenuStrip();
+        contextMenu.Items.Add("Show widget", null, (_, _) => showWidget());
+        contextMenu.Items.Add(new ToolStripSeparator());
+        contextMenu.Items.Add("Exit", null, (_, _) => exitApplication());
+
+        trayIcon = WinUtilTrayIcon.Create();
+        notificationIcon = new NotifyIcon
+        {
+            ContextMenuStrip = contextMenu,
+            Icon = trayIcon,
+            Text = "WinUtil",
+            Visible = true
+        };
+        notificationIcon.DoubleClick += HandleDoubleClick;
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        notificationIcon.DoubleClick -= HandleDoubleClick;
+        notificationIcon.Visible = false;
+        notificationIcon.Dispose();
+        trayIcon.Dispose();
+        contextMenu.Dispose();
+        disposed = true;
+    }
+
+    private void HandleDoubleClick(object? sender, EventArgs e)
+    {
+        contextMenu.Items[0].PerformClick();
+    }
+}
