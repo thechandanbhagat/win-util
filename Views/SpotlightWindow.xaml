@@ -3,25 +3,32 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="WinUtil command palette"
-        Width="680"
-        MinHeight="126"
-        MaxHeight="520"
+        Width="640"
+        MinHeight="88"
+        MaxHeight="480"
         AllowsTransparency="True"
         Background="Transparent"
+        FontFamily="{StaticResource BodyFont}"
+        FontSize="{StaticResource FontSizeBody}"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         Topmost="True"
         SizeToContent="Height"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
+        RenderOptions.ClearTypeHint="Enabled"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         Deactivated="HandleDeactivated"
         PreviewKeyDown="HandlePreviewKeyDown">
   <Window.Resources>
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-    <sys:Double x:Key="ActionResultsMaximumHeight">264</sys:Double>
+    <sys:Double x:Key="ActionResultsMaximumHeight">288</sys:Double>
+    <sys:Double x:Key="SearchRowHeight">44</sys:Double>
+
     <Style x:Key="CommandResultItem" TargetType="ListBoxItem">
-      <Setter Property="Margin" Value="0,0,0,4" />
-      <Setter Property="Padding" Value="12" />
+      <Setter Property="Margin" Value="0,1" />
+      <Setter Property="Padding" Value="10,8" />
       <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
       <Setter Property="Template">
         <Setter.Value>
@@ -31,62 +38,76 @@
                     Background="Transparent"
                     BorderBrush="Transparent"
                     BorderThickness="1"
-                    CornerRadius="10">
+                    CornerRadius="{StaticResource ControlCornerRadius}"
+                    SnapsToDevicePixels="True">
               <ContentPresenter />
             </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="ResultBorder" Property="Background" Value="{StaticResource SurfaceInteractiveBrush}" />
+                <Setter TargetName="ResultBorder" Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
               </Trigger>
               <Trigger Property="IsSelected" Value="True">
-                <Setter TargetName="ResultBorder" Property="Background" Value="{StaticResource AccentMutedBrush}" />
-                <Setter TargetName="ResultBorder" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                <Setter TargetName="ResultBorder" Property="Background" Value="{StaticResource SurfaceInteractiveBrush}" />
               </Trigger>
               <Trigger Property="IsKeyboardFocused" Value="True">
-                <Setter TargetName="ResultBorder" Property="BorderBrush" Value="{StaticResource TextPrimaryBrush}" />
+                <Setter TargetName="ResultBorder" Property="BorderBrush" Value="{StaticResource BorderBrush}" />
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
         </Setter.Value>
       </Setter>
     </Style>
+
+    <Style x:Key="KeyHint" TargetType="Border">
+      <Setter Property="Padding" Value="5,1" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="3" />
+    </Style>
+
+    <Style x:Key="KeyHintText" TargetType="TextBlock" BasedOn="{StaticResource ValueText}">
+      <Setter Property="FontSize" Value="10" />
+      <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+    </Style>
   </Window.Resources>
 
-  <Border Margin="16"
-          Padding="20"
+  <Border Margin="12"
+          Padding="8"
           Background="{StaticResource SurfaceBrush}"
           BorderBrush="{StaticResource BorderBrush}"
           BorderThickness="1"
-          CornerRadius="18"
-          Effect="{StaticResource ElevatedShadow}">
+          CornerRadius="{StaticResource CardCornerRadius}"
+          Effect="{StaticResource ElevatedShadow}"
+          SnapsToDevicePixels="True">
     <StackPanel>
-      <Border
-              Height="56"
+      <Border Height="{StaticResource SearchRowHeight}"
+              Padding="12,0"
               Background="{StaticResource SurfaceRaisedBrush}"
               BorderBrush="{StaticResource BorderBrush}"
               BorderThickness="1"
-              CornerRadius="12">
+              CornerRadius="{StaticResource ControlCornerRadius}">
         <Border.Style>
           <Style TargetType="Border">
             <Style.Triggers>
               <DataTrigger Binding="{Binding ElementName=CommandTextBox, Path=IsKeyboardFocused}" Value="True">
                 <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                <Setter Property="BorderThickness" Value="2" />
               </DataTrigger>
             </Style.Triggers>
           </Style>
         </Border.Style>
-        <Grid Margin="16,0">
+        <Grid>
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="28" />
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
           </Grid.ColumnDefinitions>
-          <TextBlock VerticalAlignment="Center"
-                     FontFamily="Cascadia Mono"
-                     FontSize="18"
-                     FontWeight="SemiBold"
+          <TextBlock Margin="0,0,10,0"
+                     VerticalAlignment="Center"
+                     FontFamily="{StaticResource MonoFont}"
+                     FontSize="{StaticResource FontSizeSubtitle}"
                      Foreground="{StaticResource AccentBrush}"
-                     Text=">_" />
+                     Text="&gt;" />
           <Grid Grid.Column="1">
             <TextBox x:Name="CommandTextBox"
                      Padding="0"
@@ -94,14 +115,14 @@
                      Background="Transparent"
                      BorderThickness="0"
                      CaretBrush="{StaticResource AccentBrush}"
-                     FontFamily="Segoe UI Variable Text"
-                     FontSize="17"
+                     FontSize="15"
                      Foreground="{StaticResource TextPrimaryBrush}"
+                     SelectionBrush="{StaticResource AccentMutedBrush}"
                      Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}"
                      AutomationProperties.Name="Search tools" />
             <TextBlock VerticalAlignment="Center"
                        IsHitTestVisible="False"
-                       FontSize="17"
+                       FontSize="15"
                        Foreground="{StaticResource TextSecondaryBrush}"
                        Text="Search a tool or type a command">
               <TextBlock.Style>
@@ -119,23 +140,20 @@
         </Grid>
       </Border>
 
-      <Border Margin="0,8,0,0"
-              Padding="12"
+      <Border Margin="0,6,0,0"
+              Padding="10,8"
               Background="{StaticResource SurfaceRaisedBrush}"
               BorderBrush="{StaticResource ErrorBrush}"
               BorderThickness="1"
-              CornerRadius="10"
+              CornerRadius="{StaticResource ControlCornerRadius}"
               Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}">
-        <TextBlock Foreground="{StaticResource ErrorBrush}"
-                   TextWrapping="Wrap"
-                   Text="{Binding ErrorMessage}" />
+        <TextBlock Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}" />
       </Border>
 
-      <Grid Margin="0,12,0,0"
+      <Grid Margin="0,6,0,0"
             Visibility="{Binding HasQuery, Converter={StaticResource BooleanToVisibilityConverter}}">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
-          <RowDefinition Height="12" />
           <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid>
@@ -157,44 +175,46 @@
               <DataTemplate>
                 <Grid>
                   <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="36" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                   </Grid.ColumnDefinitions>
-                  <Border Width="28"
-                          Height="28"
-                          VerticalAlignment="Top"
-                          Background="{StaticResource SurfaceInteractiveBrush}"
-                          CornerRadius="8">
-                    <TextBlock HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               FontFamily="Cascadia Mono"
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               Foreground="{StaticResource AccentBrush}"
-                               Text="&gt;" />
-                  </Border>
-                  <StackPanel Grid.Column="1">
-                    <TextBlock FontSize="15"
-                               FontWeight="SemiBold"
-                               Foreground="{StaticResource TextPrimaryBrush}"
-                               Text="{Binding Title}" />
-                    <TextBlock Margin="0,3,0,0"
-                               Foreground="{StaticResource TextSecondaryBrush}"
-                               Text="{Binding Description}"
-                               TextTrimming="CharacterEllipsis" />
-                  </StackPanel>
-                  <Border Grid.Column="2"
-                          Padding="7,3"
+                  <Border Width="24"
+                          Height="24"
+                          Margin="0,0,10,0"
                           VerticalAlignment="Center"
                           Background="{StaticResource SurfaceBrush}"
                           BorderBrush="{StaticResource BorderBrush}"
                           BorderThickness="1"
                           CornerRadius="5">
-                    <TextBlock FontFamily="Cascadia Mono"
-                               FontSize="10"
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontFamily="{StaticResource MonoFont}"
+                               FontSize="{StaticResource FontSizeCaption}"
                                Foreground="{StaticResource TextSecondaryBrush}"
-                               Text="ENTER" />
+                               Text="&gt;" />
+                  </Border>
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource BaseText}"
+                               FontWeight="SemiBold"
+                               Text="{Binding Title}"
+                               TextTrimming="CharacterEllipsis"
+                               TextWrapping="NoWrap" />
+                    <TextBlock Margin="0,1,0,0"
+                               Style="{StaticResource CaptionText}"
+                               Text="{Binding Description}"
+                               TextTrimming="CharacterEllipsis"
+                               TextWrapping="NoWrap" />
+                  </StackPanel>
+                  <Border Grid.Column="2"
+                          Margin="12,0,0,0"
+                          Style="{StaticResource KeyHint}">
+                    <Border.Visibility>
+                      <Binding Path="IsSelected"
+                               RelativeSource="{RelativeSource AncestorType=ListBoxItem}"
+                               Converter="{StaticResource BooleanToVisibilityConverter}" />
+                    </Border.Visibility>
+                    <TextBlock Style="{StaticResource KeyHintText}" Text="↵" />
                   </Border>
                 </Grid>
               </DataTemplate>
@@ -202,7 +222,7 @@
           </ListBox>
 
           <StackPanel HorizontalAlignment="Center"
-                      Margin="0,20"
+                      Margin="0,16"
                       Visibility="Collapsed">
             <StackPanel.Style>
               <Style TargetType="StackPanel">
@@ -218,20 +238,20 @@
               </Style>
             </StackPanel.Style>
             <TextBlock HorizontalAlignment="Center"
-                       FontSize="15"
+                       Style="{StaticResource BaseText}"
                        FontWeight="SemiBold"
-                       Foreground="{StaticResource TextPrimaryBrush}"
                        Text="No matching tools" />
-            <TextBlock Margin="0,4,0,0"
+            <TextBlock Margin="0,2,0,0"
                        HorizontalAlignment="Center"
-                       Foreground="{StaticResource TextSecondaryBrush}"
-                       Text="Try uuid or password." />
+                       Style="{StaticResource CaptionText}"
+                       Text="Try uuid, password, jwt, json, base64 or url." />
           </StackPanel>
         </Grid>
 
-        <Border Grid.Row="2"
-                Padding="0,12,0,0"
-                BorderBrush="{StaticResource BorderBrush}"
+        <Border Grid.Row="1"
+                Margin="0,6,0,0"
+                Padding="10,8,10,2"
+                BorderBrush="{StaticResource DividerBrush}"
                 BorderThickness="0,1,0,0">
           <Grid>
             <Grid.ColumnDefinitions>
@@ -239,19 +259,23 @@
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock VerticalAlignment="Center"
-                       FontSize="12"
-                       Foreground="{StaticResource TextSecondaryBrush}"
-                       Text="Commands insert results or replace your selected text." />
+                       Style="{StaticResource CaptionText}"
+                       Text="Results are inserted or replace the selected text."
+                       TextTrimming="CharacterEllipsis"
+                       TextWrapping="NoWrap" />
             <StackPanel Grid.Column="1" Orientation="Horizontal">
-              <TextBlock FontFamily="Cascadia Mono"
-                         FontSize="11"
-                         Foreground="{StaticResource TextSecondaryBrush}"
-                         Text="↑↓ navigate" />
-              <TextBlock Margin="12,0,0,0"
-                         FontFamily="Cascadia Mono"
-                         FontSize="11"
-                         Foreground="{StaticResource TextSecondaryBrush}"
-                         Text="↵ run" />
+              <Border Style="{StaticResource KeyHint}">
+                <TextBlock Style="{StaticResource KeyHintText}" Text="↑↓" />
+              </Border>
+              <TextBlock Margin="4,0,10,0" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Text="navigate" />
+              <Border Style="{StaticResource KeyHint}">
+                <TextBlock Style="{StaticResource KeyHintText}" Text="↵" />
+              </Border>
+              <TextBlock Margin="4,0,10,0" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Text="run" />
+              <Border Style="{StaticResource KeyHint}">
+                <TextBlock Style="{StaticResource KeyHintText}" Text="esc" />
+              </Border>
+              <TextBlock Margin="4,0,0,0" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Text="close" />
             </StackPanel>
           </Grid>
         </Border>

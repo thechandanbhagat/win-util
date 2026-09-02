@@ -2,12 +2,17 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:controls="clr-namespace:WinUtil.Views.Controls"
         Title="WinUtil settings"
-        Width="880"
-        Height="620"
-        MinWidth="720"
-        MinHeight="520"
+        Width="800"
+        Height="560"
+        MinWidth="680"
+        MinHeight="460"
         Background="{StaticResource CanvasBrush}"
+        FontFamily="{StaticResource BodyFont}"
+        FontSize="{StaticResource FontSizeBody}"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
         WindowStartupLocation="CenterScreen">
   <Window.Resources>
     <sys:Double x:Key="MinimumBackgroundOpacity">0.55</sys:Double>
@@ -19,9 +24,10 @@
     <sys:Double x:Key="MinimumPasswordLength">8</sys:Double>
     <sys:Double x:Key="OpacityTickFrequency">0.05</sys:Double>
 
-    <Style x:Key="WidgetNavigationItem" TargetType="ListBoxItem">
-      <Setter Property="MinHeight" Value="44" />
-      <Setter Property="Margin" Value="0,0,0,4" />
+    <Style x:Key="NavigationItem" TargetType="ListBoxItem">
+      <Setter Property="MinHeight" Value="32" />
+      <Setter Property="Margin" Value="0,0,0,2" />
+      <Setter Property="Padding" Value="12,0" />
       <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
       <Setter Property="Cursor" Value="Hand" />
       <Setter Property="Template">
@@ -30,8 +36,20 @@
             <Border x:Name="ItemBorder"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    BorderThickness="1">
-              <ContentPresenter VerticalAlignment="Center" />
+                    BorderThickness="1"
+                    CornerRadius="{StaticResource ControlCornerRadius}"
+                    SnapsToDevicePixels="True">
+              <Grid>
+                <Border x:Name="SelectionBar"
+                        Width="3"
+                        Margin="0,7"
+                        HorizontalAlignment="Left"
+                        Background="{StaticResource AccentBrush}"
+                        CornerRadius="1.5"
+                        Visibility="Collapsed" />
+                <ContentPresenter Margin="{TemplateBinding Padding}"
+                                  VerticalAlignment="Center" />
+              </Grid>
             </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True">
@@ -39,8 +57,8 @@
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
               </Trigger>
               <Trigger Property="IsSelected" Value="True">
-                <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource AccentMutedBrush}" />
-                <Setter TargetName="ItemBorder" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
+                <Setter TargetName="SelectionBar" Property="Visibility" Value="Visible" />
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
                 <Setter Property="FontWeight" Value="SemiBold" />
               </Trigger>
@@ -52,818 +70,492 @@
         </Setter.Value>
       </Setter>
     </Style>
+
+    <Style x:Key="NavigationListBox" TargetType="ListBox">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0,0,0,16" />
+      <Setter Property="ItemContainerStyle" Value="{StaticResource NavigationItem}" />
+    </Style>
+
+    <Style x:Key="PageHeader" TargetType="StackPanel">
+      <Setter Property="Margin" Value="0,0,0,16" />
+    </Style>
+
+    <Style x:Key="ClearButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="Margin" Value="8,0,0,0" />
+    </Style>
+
+    <Style x:Key="SliderValueText" TargetType="TextBlock" BasedOn="{StaticResource ValueText}">
+      <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+    </Style>
+
+    <Style x:Key="SliderRow" TargetType="StackPanel">
+      <Setter Property="Margin" Value="0,10" />
+    </Style>
   </Window.Resources>
 
-  <Grid Margin="24">
-    <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="24" />
-      <RowDefinition Height="*" />
-      <RowDefinition Height="24" />
-      <RowDefinition Height="Auto" />
-    </Grid.RowDefinitions>
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="184" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
 
-    <Grid>
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="Auto" />
-        <ColumnDefinition Width="12" />
-        <ColumnDefinition Width="*" />
-      </Grid.ColumnDefinitions>
-      <Border Width="4"
-              Height="28"
-              VerticalAlignment="Center"
-              Background="{StaticResource AccentBrush}" />
-      <TextBlock Grid.Column="2"
-                 VerticalAlignment="Center"
-                 FontFamily="Segoe UI Variable Display"
-                 FontSize="24"
-                 FontWeight="SemiBold"
-                 Foreground="{StaticResource TextPrimaryBrush}"
-                 Text="Settings" />
-    </Grid>
+    <Border Background="{StaticResource SurfaceBrush}" Padding="12,16">
+      <StackPanel>
+        <TextBlock Margin="8,0,0,16"
+                   Style="{StaticResource TitleText}"
+                   Text="Settings" />
 
-    <Grid Grid.Row="2">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="160" />
-        <ColumnDefinition Width="32" />
-        <ColumnDefinition Width="*" />
-      </Grid.ColumnDefinitions>
+        <TextBlock Style="{StaticResource SectionLabelText}" Text="Widget" />
+        <ListBox x:Name="SettingsNavigationListBox"
+                 Style="{StaticResource NavigationListBox}"
+                 SelectionChanged="HandleWidgetNavigationSelectionChanged"
+                 AutomationProperties.Name="Widget settings">
+          <ListBoxItem Content="Desktop widget" />
+        </ListBox>
 
-      <Border BorderBrush="{StaticResource BorderBrush}"
-              BorderThickness="0,0,1,0">
-        <Grid>
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="12" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="24" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="12" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-          </Grid.RowDefinitions>
-          <TextBlock FontFamily="Cascadia Mono"
-                     FontSize="11"
-                     FontWeight="SemiBold"
-                     Foreground="{StaticResource TextSecondaryBrush}"
-                     Text="WIDGET" />
-          <ListBox x:Name="SettingsNavigationListBox"
-                    Grid.Row="2"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    ItemContainerStyle="{StaticResource WidgetNavigationItem}"
-                   SelectionChanged="HandleWidgetNavigationSelectionChanged"
-                   AutomationProperties.Name="Widget settings">
-            <ListBoxItem>
-              <Grid Margin="8,0">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="24" />
-                  <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           FontFamily="Cascadia Mono"
-                           FontSize="11"
-                           Foreground="{StaticResource AccentBrush}"
-                           Text="W" />
-                <TextBlock Grid.Column="1"
-                           VerticalAlignment="Center"
-                           Text="Desktop widget" />
-              </Grid>
-            </ListBoxItem>
-          </ListBox>
-          <TextBlock Grid.Row="4"
-                     FontFamily="Cascadia Mono"
-                     FontSize="11"
-                     FontWeight="SemiBold"
-                     Foreground="{StaticResource TextSecondaryBrush}"
-                     Text="SPOTLIGHT" />
-          <ListBox x:Name="SpotlightNavigationListBox"
-                   Grid.Row="6"
-                   Background="Transparent"
-                   BorderThickness="0"
-                   ItemContainerStyle="{StaticResource WidgetNavigationItem}"
-                   SelectionChanged="HandleSpotlightNavigationSelectionChanged"
-                   AutomationProperties.Name="Spotlight settings">
-            <ListBoxItem>
-              <Grid Margin="8,0">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="24" />
-                  <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           FontFamily="Cascadia Mono"
-                           FontSize="11"
-                           Foreground="{StaticResource AccentBrush}"
-                           Text="U" />
-                <TextBlock Grid.Column="1"
-                           VerticalAlignment="Center"
-                           Text="UUID" />
-              </Grid>
-            </ListBoxItem>
-            <ListBoxItem>
-              <Grid Margin="8,0">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="24" />
-                  <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           FontFamily="Cascadia Mono"
-                           FontSize="11"
-                           Foreground="{StaticResource AccentBrush}"
-                           Text="P" />
-                <TextBlock Grid.Column="1"
-                           VerticalAlignment="Center"
-                           Text="Password" />
-              </Grid>
-            </ListBoxItem>
-            <ListBoxItem>
-              <Grid Margin="8,0">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="24" />
-                  <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           FontFamily="Cascadia Mono"
-                           FontSize="11"
-                           Foreground="{StaticResource AccentBrush}"
-                           Text="J" />
-                <TextBlock Grid.Column="1"
-                           VerticalAlignment="Center"
-                           Text="JWT secret" />
-              </Grid>
-            </ListBoxItem>
-            <ListBoxItem>
-              <Grid Margin="8,0">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="24" />
-                  <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           FontFamily="Cascadia Mono"
-                           FontSize="11"
-                           Foreground="{StaticResource AccentBrush}"
-                           Text="F" />
-                <TextBlock Grid.Column="1"
-                           VerticalAlignment="Center"
-                           Text="Text tools" />
-              </Grid>
-            </ListBoxItem>
-          </ListBox>
-        </Grid>
-      </Border>
+        <TextBlock Style="{StaticResource SectionLabelText}" Text="Spotlight" />
+        <ListBox x:Name="SpotlightNavigationListBox"
+                 Style="{StaticResource NavigationListBox}"
+                 SelectionChanged="HandleSpotlightNavigationSelectionChanged"
+                 AutomationProperties.Name="Spotlight settings">
+          <ListBoxItem Content="UUID" />
+          <ListBoxItem Content="Password" />
+          <ListBoxItem Content="JWT secret" />
+          <ListBoxItem Content="Text tools" />
+        </ListBox>
+      </StackPanel>
+    </Border>
 
-      <ScrollViewer Grid.Column="2"
+    <Grid Grid.Column="1">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <ScrollViewer Padding="24,20,24,0"
                     HorizontalScrollBarVisibility="Disabled"
                     VerticalScrollBarVisibility="Auto">
-        <StackPanel>
-        <StackPanel x:Name="WidgetSettingsPanel">
-        <TextBlock FontFamily="Segoe UI Variable Display"
-                   FontSize="22"
-                   FontWeight="SemiBold"
-                   Foreground="{StaticResource TextPrimaryBrush}"
-                   Text="Desktop widget" />
-
-        <Grid Margin="0,24,0,0">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-          </Grid.ColumnDefinitions>
-          <CheckBox x:Name="KeepOnTopCheckBox"
-                    Style="{StaticResource SettingsCheckBox}"
-                    Content="Keep above other windows"
-                    FontSize="15" />
-          <CheckBox x:Name="ShowSecondsCheckBox"
-                    Grid.Column="1"
-                    Style="{StaticResource SettingsCheckBox}"
-                    Content="Show seconds"
-                    FontSize="15" />
-        </Grid>
-
-        <Border Margin="0,24,0,0"
-                BorderBrush="{StaticResource BorderBrush}"
-                BorderThickness="0,1,0,0" />
-
-        <Grid Margin="0,24,0,0">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
-          <TextBlock x:Name="AutoHideDelayLabel"
-                     VerticalAlignment="Center"
-                     FontSize="15"
-                     FontWeight="SemiBold"
-                     Foreground="{StaticResource TextPrimaryBrush}"
-                     Text="Fade after" />
-          <ComboBox x:Name="AutoHideDelayComboBox"
-                    Grid.Column="1"
-                    MinWidth="132"
-                    Style="{StaticResource SettingsComboBox}"
-                    AutomationProperties.LabeledBy="{Binding ElementName=AutoHideDelayLabel}">
-            <ComboBoxItem Content="10 seconds" />
-            <ComboBoxItem Content="20 seconds" />
-          </ComboBox>
-        </Grid>
-
-        <Border Margin="0,24,0,0"
-                BorderBrush="{StaticResource BorderBrush}"
-                BorderThickness="0,1,0,0" />
-
-        <Grid Margin="0,24,0,0">
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="12" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="20" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="12" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="20" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="12" />
-            <RowDefinition Height="Auto" />
-          </Grid.RowDefinitions>
-
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock x:Name="OpacityLabel"
-                       FontSize="15"
-                       FontWeight="SemiBold"
-                       Foreground="{StaticResource TextPrimaryBrush}"
-                       Text="Widget opacity" />
-            <TextBlock x:Name="OpacityValueText"
-                       Grid.Column="1"
-                       FontFamily="Cascadia Mono"
-                       FontSize="14"
-                       Foreground="{StaticResource AccentBrush}"
-                       Text="100%" />
-          </Grid>
-          <Slider x:Name="OpacitySlider"
-                  Grid.Row="2"
-                  Minimum="{StaticResource MinimumWidgetOpacity}"
-                  Maximum="{StaticResource MaximumOpacity}"
-                  TickFrequency="{StaticResource OpacityTickFrequency}"
-                  IsSnapToTickEnabled="True"
-                  Style="{StaticResource SettingsSlider}"
-                  ValueChanged="HandleOpacityValueChanged"
-                  AutomationProperties.LabeledBy="{Binding ElementName=OpacityLabel}" />
-
-          <Grid Grid.Row="4">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock x:Name="BackgroundOpacityLabel"
-                       FontSize="15"
-                       FontWeight="SemiBold"
-                       Foreground="{StaticResource TextPrimaryBrush}"
-                       Text="Background opacity" />
-            <TextBlock x:Name="BackgroundOpacityValueText"
-                       Grid.Column="1"
-                       FontFamily="Cascadia Mono"
-                       FontSize="14"
-                       Foreground="{StaticResource AccentBrush}"
-                       Text="100%" />
-          </Grid>
-          <Slider x:Name="BackgroundOpacitySlider"
-                  Grid.Row="6"
-                  Minimum="{StaticResource MinimumBackgroundOpacity}"
-                  Maximum="{StaticResource MaximumOpacity}"
-                  TickFrequency="{StaticResource OpacityTickFrequency}"
-                  IsSnapToTickEnabled="True"
-                  Style="{StaticResource SettingsSlider}"
-                  ValueChanged="HandleBackgroundOpacityValueChanged"
-                  AutomationProperties.LabeledBy="{Binding ElementName=BackgroundOpacityLabel}" />
-
-          <Grid Grid.Row="8">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock x:Name="FadedOpacityLabel"
-                       FontSize="15"
-                       FontWeight="SemiBold"
-                       Foreground="{StaticResource TextPrimaryBrush}"
-                       Text="Faded opacity" />
-            <TextBlock x:Name="FadedOpacityValueText"
-                       Grid.Column="1"
-                       FontFamily="Cascadia Mono"
-                       FontSize="14"
-                       Foreground="{StaticResource AccentBrush}"
-                       Text="10%" />
-          </Grid>
-          <Slider x:Name="FadedOpacitySlider"
-                  Grid.Row="10"
-                  Minimum="{StaticResource MinimumFadedOpacity}"
-                  Maximum="{StaticResource MaximumFadedOpacity}"
-                  TickFrequency="{StaticResource OpacityTickFrequency}"
-                  IsSnapToTickEnabled="True"
-                  Style="{StaticResource SettingsSlider}"
-                  ValueChanged="HandleFadedOpacityValueChanged"
-                  AutomationProperties.LabeledBy="{Binding ElementName=FadedOpacityLabel}" />
-        </Grid>
-        </StackPanel>
-
-        <StackPanel x:Name="UuidSettingsPanel"
-                    Visibility="Collapsed">
-          <TextBlock FontFamily="Segoe UI Variable Display"
-                     FontSize="22"
-                     FontWeight="SemiBold"
-                     Foreground="{StaticResource TextPrimaryBrush}"
-                     Text="UUID" />
-          <TextBlock Margin="0,4,0,0"
-                     Foreground="{StaticResource TextSecondaryBrush}"
-                     Text="Choose the UUID version generated by Spotlight." />
-
-          <Grid Margin="0,24,0,0">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel VerticalAlignment="Center">
-              <TextBlock x:Name="UuidVersionLabel"
-                         FontSize="15"
-                         FontWeight="SemiBold"
-                         Foreground="{StaticResource TextPrimaryBrush}"
-                         Text="UUID version" />
-              <TextBlock Margin="0,4,0,0"
-                         Foreground="{StaticResource TextSecondaryBrush}"
-                         Text="Version 7 sorts by creation time; Version 4 is random." />
+        <StackPanel Margin="0,0,0,20">
+          <StackPanel x:Name="WidgetSettingsPanel">
+            <StackPanel Style="{StaticResource PageHeader}">
+              <TextBlock Style="{StaticResource TitleText}" Text="Desktop widget" />
+              <TextBlock Margin="0,2,0,0"
+                         Style="{StaticResource SecondaryText}"
+                         Text="Behaviour and appearance of the always-on clock." />
             </StackPanel>
-            <ComboBox x:Name="UuidVersionComboBox"
-                      Grid.Column="1"
-                      MinWidth="180"
-                      Style="{StaticResource SettingsComboBox}"
-                      AutomationProperties.LabeledBy="{Binding ElementName=UuidVersionLabel}">
-              <ComboBoxItem Content="Version 4 — random" />
-              <ComboBoxItem Content="Version 7 — ordered" />
-            </ComboBox>
-          </Grid>
-          <Border Margin="0,24,0,0"
-                  Padding="0,20,0,0"
-                  BorderBrush="{StaticResource BorderBrush}"
-                  BorderThickness="0,1,0,0">
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
-              <StackPanel VerticalAlignment="Center">
-                <TextBlock x:Name="UuidShortcutLabel"
-                           FontSize="15"
-                           FontWeight="SemiBold"
-                           Foreground="{StaticResource TextPrimaryBrush}"
-                           Text="Optional global shortcut" />
-                <TextBlock Margin="0,4,0,0"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           Text="Runs Generate UUID from any app and overrides the matching app shortcut." />
+
+            <Border Style="{StaticResource PanelCard}">
+              <StackPanel>
+                <controls:SettingRow Title="Keep above other windows">
+                  <CheckBox x:Name="KeepOnTopCheckBox"
+                            Style="{StaticResource SettingsCheckBox}"
+                            AutomationProperties.Name="Keep above other windows" />
+                </controls:SettingRow>
+                <Border Style="{StaticResource CardDivider}" />
+                <controls:SettingRow Title="Show seconds">
+                  <CheckBox x:Name="ShowSecondsCheckBox"
+                            Style="{StaticResource SettingsCheckBox}"
+                            AutomationProperties.Name="Show seconds" />
+                </controls:SettingRow>
+                <Border Style="{StaticResource CardDivider}" />
+                <controls:SettingRow Title="Fade after"
+                                     Description="Idle time before the widget dims to its faded opacity.">
+                  <ComboBox x:Name="AutoHideDelayComboBox"
+                            Style="{StaticResource SettingsComboBox}"
+                            AutomationProperties.Name="Fade after">
+                    <ComboBoxItem Content="10 seconds" />
+                    <ComboBoxItem Content="20 seconds" />
+                  </ComboBox>
+                </controls:SettingRow>
               </StackPanel>
-              <StackPanel Grid.Column="1"
-                          Orientation="Horizontal">
-                <TextBox x:Name="UuidShortcutTextBox"
-                         Width="156"
-                         Height="36"
-                         Padding="10,0"
-                         VerticalContentAlignment="Center"
-                         Background="{StaticResource SurfaceRaisedBrush}"
-                         BorderBrush="{StaticResource BorderBrush}"
-                         Foreground="{StaticResource TextPrimaryBrush}"
-                         IsReadOnly="True"
-                         Tag="uuid"
-                         GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                         LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
-                         AutomationProperties.HelpText="Click and press the physical key combination to assign the UUID shortcut."
-                         AutomationProperties.LabeledBy="{Binding ElementName=UuidShortcutLabel}" />
-                <Button Margin="8,0,0,0"
-                        Style="{StaticResource SecondaryButton}"
-                        Tag="uuid"
-                        Content="Clear"
-                        Click="HandleClearShortcut" />
-              </StackPanel>
-            </Grid>
-          </Border>
-        </StackPanel>
+            </Border>
 
-        <StackPanel x:Name="PasswordSettingsPanel"
-                    Visibility="Collapsed">
-          <TextBlock FontFamily="Segoe UI Variable Display"
-                     FontSize="22"
-                     FontWeight="SemiBold"
-                     Foreground="{StaticResource TextPrimaryBrush}"
-                     Text="Password" />
-          <TextBlock Margin="0,4,0,0"
-                     Foreground="{StaticResource TextSecondaryBrush}"
-                     Text="Choose the length and characters generated by Spotlight." />
-          <Grid Margin="0,24,0,0">
-            <Grid.RowDefinitions>
-              <RowDefinition Height="Auto" />
-              <RowDefinition Height="12" />
-              <RowDefinition Height="Auto" />
-              <RowDefinition Height="20" />
-              <RowDefinition Height="Auto" />
-              <RowDefinition Height="12" />
-              <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
-              <TextBlock x:Name="PasswordLengthLabel"
-                         FontSize="15"
-                         FontWeight="SemiBold"
-                         Foreground="{StaticResource TextPrimaryBrush}"
-                         Text="Password length" />
-              <TextBlock x:Name="PasswordLengthValueText"
-                         Grid.Column="1"
-                         FontFamily="Cascadia Mono"
-                         FontSize="14"
-                         Foreground="{StaticResource AccentBrush}"
-                         Text="20 characters" />
-            </Grid>
-            <Slider x:Name="PasswordLengthSlider"
-                    Grid.Row="2"
-                    Minimum="{StaticResource MinimumPasswordLength}"
-                    Maximum="{StaticResource MaximumPasswordLength}"
-                    TickFrequency="1"
-                    IsSnapToTickEnabled="True"
-                    Style="{StaticResource SettingsSlider}"
-                    ValueChanged="HandlePasswordLengthValueChanged"
-                    AutomationProperties.LabeledBy="{Binding ElementName=PasswordLengthLabel}" />
+            <TextBlock Margin="0,20,0,8"
+                       Style="{StaticResource SubtitleText}"
+                       Text="Opacity" />
+            <Border Style="{StaticResource PanelCard}">
+              <StackPanel>
+                <StackPanel Style="{StaticResource SliderRow}">
+                  <Grid>
+                    <TextBlock Style="{StaticResource BaseText}" Text="Widget" />
+                    <TextBlock x:Name="OpacityValueText"
+                               HorizontalAlignment="Right"
+                               Style="{StaticResource SliderValueText}"
+                               Text="100%" />
+                  </Grid>
+                  <Slider x:Name="OpacitySlider"
+                          Margin="0,6,0,0"
+                          Minimum="{StaticResource MinimumWidgetOpacity}"
+                          Maximum="{StaticResource MaximumOpacity}"
+                          TickFrequency="{StaticResource OpacityTickFrequency}"
+                          IsSnapToTickEnabled="True"
+                          Style="{StaticResource SettingsSlider}"
+                          ValueChanged="HandleOpacityValueChanged"
+                          AutomationProperties.Name="Widget opacity" />
+                </StackPanel>
+                <Border Style="{StaticResource CardDivider}" />
+                <StackPanel Style="{StaticResource SliderRow}">
+                  <Grid>
+                    <TextBlock Style="{StaticResource BaseText}" Text="Background" />
+                    <TextBlock x:Name="BackgroundOpacityValueText"
+                               HorizontalAlignment="Right"
+                               Style="{StaticResource SliderValueText}"
+                               Text="100%" />
+                  </Grid>
+                  <Slider x:Name="BackgroundOpacitySlider"
+                          Margin="0,6,0,0"
+                          Minimum="{StaticResource MinimumBackgroundOpacity}"
+                          Maximum="{StaticResource MaximumOpacity}"
+                          TickFrequency="{StaticResource OpacityTickFrequency}"
+                          IsSnapToTickEnabled="True"
+                          Style="{StaticResource SettingsSlider}"
+                          ValueChanged="HandleBackgroundOpacityValueChanged"
+                          AutomationProperties.Name="Background opacity" />
+                </StackPanel>
+                <Border Style="{StaticResource CardDivider}" />
+                <StackPanel Style="{StaticResource SliderRow}">
+                  <Grid>
+                    <TextBlock Style="{StaticResource BaseText}" Text="Faded" />
+                    <TextBlock x:Name="FadedOpacityValueText"
+                               HorizontalAlignment="Right"
+                               Style="{StaticResource SliderValueText}"
+                               Text="10%" />
+                  </Grid>
+                  <Slider x:Name="FadedOpacitySlider"
+                          Margin="0,6,0,0"
+                          Minimum="{StaticResource MinimumFadedOpacity}"
+                          Maximum="{StaticResource MaximumFadedOpacity}"
+                          TickFrequency="{StaticResource OpacityTickFrequency}"
+                          IsSnapToTickEnabled="True"
+                          Style="{StaticResource SettingsSlider}"
+                          ValueChanged="HandleFadedOpacityValueChanged"
+                          AutomationProperties.Name="Faded opacity" />
+                </StackPanel>
+              </StackPanel>
+            </Border>
+          </StackPanel>
 
-            <TextBlock Grid.Row="4"
-                       FontSize="15"
-                       FontWeight="SemiBold"
-                       Foreground="{StaticResource TextPrimaryBrush}"
-                       Text="Include characters" />
-            <Grid Grid.Row="6">
-              <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="12" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="8" />
-                <RowDefinition Height="Auto" />
-              </Grid.RowDefinitions>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-              </Grid.ColumnDefinitions>
-              <CheckBox x:Name="PasswordIncludesUppercaseCheckBox"
-                        Style="{StaticResource SettingsCheckBox}"
-                        Content="Uppercase letters (A–Z)"
-                        FontSize="15"
-                        Checked="HandlePasswordCharacterSetChanged"
-                        Unchecked="HandlePasswordCharacterSetChanged" />
-              <CheckBox x:Name="PasswordIncludesLowercaseCheckBox"
-                        Grid.Column="1"
-                        Style="{StaticResource SettingsCheckBox}"
-                        Content="Lowercase letters (a–z)"
-                        FontSize="15"
-                        Checked="HandlePasswordCharacterSetChanged"
-                        Unchecked="HandlePasswordCharacterSetChanged" />
-              <CheckBox x:Name="PasswordIncludesDigitsCheckBox"
-                        Grid.Row="2"
-                        Style="{StaticResource SettingsCheckBox}"
-                        Content="Numbers (2–9)"
-                        FontSize="15"
-                        Checked="HandlePasswordCharacterSetChanged"
-                        Unchecked="HandlePasswordCharacterSetChanged" />
-              <CheckBox x:Name="PasswordIncludesSymbolsCheckBox"
-                        Grid.Row="2"
-                        Grid.Column="1"
-                        Style="{StaticResource SettingsCheckBox}"
-                        Content="Symbols (! @ # $ - _)"
-                        FontSize="15"
-                        Checked="HandlePasswordCharacterSetChanged"
-                        Unchecked="HandlePasswordCharacterSetChanged" />
-              <TextBlock x:Name="PasswordCharacterSetErrorText"
-                         Grid.Row="4"
-                         Grid.ColumnSpan="2"
-                         Foreground="{StaticResource ErrorBrush}"
-                         Text="Select at least one character group."
-                         Visibility="Collapsed" />
-            </Grid>
-          </Grid>
-          <Border Margin="0,24,0,0"
-                  Padding="0,20,0,0"
-                  BorderBrush="{StaticResource BorderBrush}"
-                  BorderThickness="0,1,0,0">
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
-              <StackPanel VerticalAlignment="Center">
-                <TextBlock x:Name="PasswordShortcutLabel"
-                           FontSize="15"
-                           FontWeight="SemiBold"
-                           Foreground="{StaticResource TextPrimaryBrush}"
-                           Text="Optional global shortcut" />
-                <TextBlock Margin="0,4,0,0"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           Text="Runs Generate password from any app and overrides the matching app shortcut." />
+          <StackPanel x:Name="UuidSettingsPanel" Visibility="Collapsed">
+            <StackPanel Style="{StaticResource PageHeader}">
+              <TextBlock Style="{StaticResource TitleText}" Text="UUID" />
+              <TextBlock Margin="0,2,0,0"
+                         Style="{StaticResource SecondaryText}"
+                         Text="Choose the UUID version generated by Spotlight." />
+            </StackPanel>
+            <Border Style="{StaticResource PanelCard}">
+              <StackPanel>
+                <controls:SettingRow Title="UUID version"
+                                     Description="Version 7 sorts by creation time; Version 4 is random.">
+                  <ComboBox x:Name="UuidVersionComboBox"
+                            MinWidth="180"
+                            Style="{StaticResource SettingsComboBox}"
+                            AutomationProperties.Name="UUID version">
+                    <ComboBoxItem Content="Version 4 — random" />
+                    <ComboBoxItem Content="Version 7 — ordered" />
+                  </ComboBox>
+                </controls:SettingRow>
+                <Border Style="{StaticResource CardDivider}" />
+                <controls:SettingRow Title="Global shortcut"
+                                     Description="Runs Generate UUID from any app and overrides the matching app shortcut.">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="UuidShortcutTextBox"
+                             Style="{StaticResource ShortcutTextBox}"
+                             Tag="uuid"
+                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
+                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
+                             AutomationProperties.Name="UUID shortcut"
+                             AutomationProperties.HelpText="Click and press the physical key combination to assign the UUID shortcut." />
+                    <Button Style="{StaticResource ClearButton}"
+                            Tag="uuid"
+                            Content="Clear"
+                            Click="HandleClearShortcut" />
+                  </StackPanel>
+                </controls:SettingRow>
               </StackPanel>
-              <StackPanel Grid.Column="1"
-                          Orientation="Horizontal">
-                <TextBox x:Name="PasswordShortcutTextBox"
-                         Width="156"
-                         Height="36"
-                         Padding="10,0"
-                         VerticalContentAlignment="Center"
-                         Background="{StaticResource SurfaceRaisedBrush}"
-                         BorderBrush="{StaticResource BorderBrush}"
-                         Foreground="{StaticResource TextPrimaryBrush}"
-                         IsReadOnly="True"
-                         Tag="password"
-                         GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                         LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
-                         AutomationProperties.HelpText="Click and press the physical key combination to assign the password shortcut."
-                         AutomationProperties.LabeledBy="{Binding ElementName=PasswordShortcutLabel}" />
-                <Button Margin="8,0,0,0"
-                        Style="{StaticResource SecondaryButton}"
-                        Tag="password"
-                        Content="Clear"
-                        Click="HandleClearShortcut" />
+            </Border>
+          </StackPanel>
+
+          <StackPanel x:Name="PasswordSettingsPanel" Visibility="Collapsed">
+            <StackPanel Style="{StaticResource PageHeader}">
+              <TextBlock Style="{StaticResource TitleText}" Text="Password" />
+              <TextBlock Margin="0,2,0,0"
+                         Style="{StaticResource SecondaryText}"
+                         Text="Choose the length and characters generated by Spotlight." />
+            </StackPanel>
+            <Border Style="{StaticResource PanelCard}">
+              <StackPanel>
+                <StackPanel Style="{StaticResource SliderRow}">
+                  <Grid>
+                    <TextBlock Style="{StaticResource BaseText}" Text="Length" />
+                    <TextBlock x:Name="PasswordLengthValueText"
+                               HorizontalAlignment="Right"
+                               Style="{StaticResource SliderValueText}"
+                               Text="20 characters" />
+                  </Grid>
+                  <Slider x:Name="PasswordLengthSlider"
+                          Margin="0,6,0,0"
+                          Minimum="{StaticResource MinimumPasswordLength}"
+                          Maximum="{StaticResource MaximumPasswordLength}"
+                          TickFrequency="1"
+                          IsSnapToTickEnabled="True"
+                          Style="{StaticResource SettingsSlider}"
+                          ValueChanged="HandlePasswordLengthValueChanged"
+                          AutomationProperties.Name="Password length" />
+                </StackPanel>
+                <Border Style="{StaticResource CardDivider}" />
+                <StackPanel Margin="0,10">
+                  <TextBlock Style="{StaticResource BaseText}" Text="Include characters" />
+                  <Grid Margin="0,8,0,0">
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="8" />
+                      <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <CheckBox x:Name="PasswordIncludesUppercaseCheckBox"
+                              Style="{StaticResource SettingsCheckBox}"
+                              Content="Uppercase (A–Z)"
+                              Checked="HandlePasswordCharacterSetChanged"
+                              Unchecked="HandlePasswordCharacterSetChanged" />
+                    <CheckBox x:Name="PasswordIncludesLowercaseCheckBox"
+                              Grid.Column="1"
+                              Style="{StaticResource SettingsCheckBox}"
+                              Content="Lowercase (a–z)"
+                              Checked="HandlePasswordCharacterSetChanged"
+                              Unchecked="HandlePasswordCharacterSetChanged" />
+                    <CheckBox x:Name="PasswordIncludesDigitsCheckBox"
+                              Grid.Row="2"
+                              Style="{StaticResource SettingsCheckBox}"
+                              Content="Numbers (2–9)"
+                              Checked="HandlePasswordCharacterSetChanged"
+                              Unchecked="HandlePasswordCharacterSetChanged" />
+                    <CheckBox x:Name="PasswordIncludesSymbolsCheckBox"
+                              Grid.Row="2"
+                              Grid.Column="1"
+                              Style="{StaticResource SettingsCheckBox}"
+                              Content="Symbols (! @ # $ - _)"
+                              Checked="HandlePasswordCharacterSetChanged"
+                              Unchecked="HandlePasswordCharacterSetChanged" />
+                  </Grid>
+                  <TextBlock x:Name="PasswordCharacterSetErrorText"
+                             Margin="0,8,0,0"
+                             Style="{StaticResource ErrorText}"
+                             Text="Select at least one character group."
+                             Visibility="Collapsed" />
+                </StackPanel>
+                <Border Style="{StaticResource CardDivider}" />
+                <controls:SettingRow Title="Global shortcut"
+                                     Description="Runs Generate password from any app and overrides the matching app shortcut.">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="PasswordShortcutTextBox"
+                             Style="{StaticResource ShortcutTextBox}"
+                             Tag="password"
+                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
+                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
+                             AutomationProperties.Name="Password shortcut"
+                             AutomationProperties.HelpText="Click and press the physical key combination to assign the password shortcut." />
+                    <Button Style="{StaticResource ClearButton}"
+                            Tag="password"
+                            Content="Clear"
+                            Click="HandleClearShortcut" />
+                  </StackPanel>
+                </controls:SettingRow>
               </StackPanel>
-            </Grid>
-          </Border>
-        </StackPanel>
-        <StackPanel x:Name="JwtSecretSettingsPanel"
-                    Visibility="Collapsed">
-          <TextBlock FontFamily="Segoe UI Variable Display"
-                     FontSize="22"
-                     FontWeight="SemiBold"
-                     Foreground="{StaticResource TextPrimaryBrush}"
-                     Text="JWT secret" />
-          <TextBlock Margin="0,4,0,0"
-                     Foreground="{StaticResource TextSecondaryBrush}"
-                     Text="Choose the entropy for the Base64URL secret generated by Spotlight." />
-          <Grid Margin="0,24,0,0">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel VerticalAlignment="Center">
-              <TextBlock x:Name="JwtSecretStrengthLabel"
-                         FontSize="15"
-                         FontWeight="SemiBold"
-                         Foreground="{StaticResource TextPrimaryBrush}"
-                         Text="Secret strength" />
-              <TextBlock Margin="0,4,0,0"
-                         Foreground="{StaticResource TextSecondaryBrush}"
-                         Text="256-bit is suitable for HS256; choose a larger value only if your service needs it." />
+            </Border>
+          </StackPanel>
+
+          <StackPanel x:Name="JwtSecretSettingsPanel" Visibility="Collapsed">
+            <StackPanel Style="{StaticResource PageHeader}">
+              <TextBlock Style="{StaticResource TitleText}" Text="JWT secret" />
+              <TextBlock Margin="0,2,0,0"
+                         Style="{StaticResource SecondaryText}"
+                         Text="Choose the entropy for the Base64URL secret generated by Spotlight." />
             </StackPanel>
-            <ComboBox x:Name="JwtSecretStrengthComboBox"
-                      Grid.Column="1"
-                      MinWidth="180"
-                      Style="{StaticResource SettingsComboBox}"
-                      AutomationProperties.LabeledBy="{Binding ElementName=JwtSecretStrengthLabel}">
-              <ComboBoxItem Content="256-bit — recommended" />
-              <ComboBoxItem Content="384-bit" />
-              <ComboBoxItem Content="512-bit" />
-            </ComboBox>
-          </Grid>
-          <Border Margin="0,24,0,0"
-                  Padding="0,20,0,0"
-                  BorderBrush="{StaticResource BorderBrush}"
-                  BorderThickness="0,1,0,0">
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
-              <StackPanel VerticalAlignment="Center">
-                <TextBlock x:Name="JwtSecretShortcutLabel"
-                           FontSize="15"
-                           FontWeight="SemiBold"
-                           Foreground="{StaticResource TextPrimaryBrush}"
-                           Text="Optional global shortcut" />
-                <TextBlock Margin="0,4,0,0"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           Text="Runs Generate JWT secret from any app and overrides the matching app shortcut." />
+            <Border Style="{StaticResource PanelCard}">
+              <StackPanel>
+                <controls:SettingRow Title="Secret strength"
+                                     Description="256-bit is suitable for HS256; choose a larger value only if your service needs it.">
+                  <ComboBox x:Name="JwtSecretStrengthComboBox"
+                            MinWidth="180"
+                            Style="{StaticResource SettingsComboBox}"
+                            AutomationProperties.Name="Secret strength">
+                    <ComboBoxItem Content="256-bit — recommended" />
+                    <ComboBoxItem Content="384-bit" />
+                    <ComboBoxItem Content="512-bit" />
+                  </ComboBox>
+                </controls:SettingRow>
+                <Border Style="{StaticResource CardDivider}" />
+                <controls:SettingRow Title="Global shortcut"
+                                     Description="Runs Generate JWT secret from any app and overrides the matching app shortcut.">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="JwtSecretShortcutTextBox"
+                             Style="{StaticResource ShortcutTextBox}"
+                             Tag="jwt-secret"
+                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
+                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
+                             AutomationProperties.Name="JWT secret shortcut"
+                             AutomationProperties.HelpText="Click and press the physical key combination to assign the JWT secret shortcut." />
+                    <Button Style="{StaticResource ClearButton}"
+                            Tag="jwt-secret"
+                            Content="Clear"
+                            Click="HandleClearShortcut" />
+                  </StackPanel>
+                </controls:SettingRow>
               </StackPanel>
-              <StackPanel Grid.Column="1"
-                          Orientation="Horizontal">
-                <TextBox x:Name="JwtSecretShortcutTextBox"
-                         Width="156"
-                         Height="36"
-                         Padding="10,0"
-                         VerticalContentAlignment="Center"
-                         Background="{StaticResource SurfaceRaisedBrush}"
-                         BorderBrush="{StaticResource BorderBrush}"
-                         Foreground="{StaticResource TextPrimaryBrush}"
-                         IsReadOnly="True"
-                         Tag="jwt-secret"
-                         GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                         LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
-                         AutomationProperties.HelpText="Click and press the physical key combination to assign the JWT secret shortcut."
-                         AutomationProperties.LabeledBy="{Binding ElementName=JwtSecretShortcutLabel}" />
-                <Button Margin="8,0,0,0"
-                        Style="{StaticResource SecondaryButton}"
-                        Tag="jwt-secret"
-                        Content="Clear"
-                        Click="HandleClearShortcut" />
+            </Border>
+          </StackPanel>
+
+          <StackPanel x:Name="TextToolsSettingsPanel" Visibility="Collapsed">
+            <StackPanel Style="{StaticResource PageHeader}">
+              <TextBlock Style="{StaticResource TitleText}" Text="Text tools" />
+              <TextBlock Margin="0,2,0,0"
+                         Style="{StaticResource SecondaryText}"
+                         Text="Transform selected text in the active app. Each shortcut overrides the matching app command." />
+            </StackPanel>
+
+            <TextBlock Margin="0,0,0,8" Style="{StaticResource SubtitleText}" Text="JSON" />
+            <Border Style="{StaticResource PanelCard}">
+              <StackPanel>
+                <controls:SettingRow Title="Format JSON" Description="Pretty-print selected JSON.">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="FormatJsonShortcutTextBox"
+                             Style="{StaticResource ShortcutTextBox}"
+                             Tag="format-json"
+                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
+                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
+                             AutomationProperties.Name="Format JSON shortcut"
+                             AutomationProperties.HelpText="Click and press the physical key combination to assign the Format JSON shortcut." />
+                    <Button Style="{StaticResource ClearButton}" Tag="format-json" Content="Clear" Click="HandleClearShortcut" />
+                  </StackPanel>
+                </controls:SettingRow>
+                <Border Style="{StaticResource CardDivider}" />
+                <controls:SettingRow Title="Minify JSON" Description="Remove insignificant JSON whitespace.">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="MinifyJsonShortcutTextBox"
+                             Style="{StaticResource ShortcutTextBox}"
+                             Tag="minify-json"
+                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
+                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
+                             AutomationProperties.Name="Minify JSON shortcut" />
+                    <Button Style="{StaticResource ClearButton}" Tag="minify-json" Content="Clear" Click="HandleClearShortcut" />
+                  </StackPanel>
+                </controls:SettingRow>
               </StackPanel>
-            </Grid>
-          </Border>
-        </StackPanel>
-        <StackPanel x:Name="TextToolsSettingsPanel"
-                    Visibility="Collapsed">
-          <TextBlock FontFamily="Segoe UI Variable Display"
-                     FontSize="22"
-                     FontWeight="SemiBold"
-                     Foreground="{StaticResource TextPrimaryBrush}"
-                     Text="Text tools" />
-          <TextBlock Margin="0,4,0,0"
-                     Foreground="{StaticResource TextSecondaryBrush}"
-                     Text="Transform selected text in the active app. Each shortcut overrides the matching app command." />
-          <Grid Margin="0,24,0,0">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel VerticalAlignment="Center">
-              <TextBlock FontSize="15"
-                         FontWeight="SemiBold"
-                         Foreground="{StaticResource TextPrimaryBrush}"
-                         Text="Format JSON" />
-              <TextBlock Margin="0,4,0,0"
-                         Foreground="{StaticResource TextSecondaryBrush}"
-                         Text="Pretty-print selected JSON." />
-            </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-              <TextBox x:Name="FormatJsonShortcutTextBox"
-                       Width="156" Height="36" Padding="10,0"
-                       VerticalContentAlignment="Center"
-                       Background="{StaticResource SurfaceRaisedBrush}"
-                       BorderBrush="{StaticResource BorderBrush}"
-                       Foreground="{StaticResource TextPrimaryBrush}"
-                       IsReadOnly="True" Tag="format-json"
-                       GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                       LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
-                       AutomationProperties.Name="Format JSON shortcut"
-                       AutomationProperties.HelpText="Click and press the physical key combination to assign the Format JSON shortcut." />
-              <Button Margin="8,0,0,0" Style="{StaticResource SecondaryButton}"
-                      Tag="format-json" Content="Clear" Click="HandleClearShortcut" />
-            </StackPanel>
-          </Grid>
-          <Grid Margin="0,20,0,0">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel VerticalAlignment="Center">
-              <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Text="Minify JSON" />
-              <TextBlock Margin="0,4,0,0" Foreground="{StaticResource TextSecondaryBrush}" Text="Remove insignificant JSON whitespace." />
-            </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-              <TextBox x:Name="MinifyJsonShortcutTextBox" Width="156" Height="36" Padding="10,0"
-                       VerticalContentAlignment="Center" Background="{StaticResource SurfaceRaisedBrush}"
-                       BorderBrush="{StaticResource BorderBrush}" Foreground="{StaticResource TextPrimaryBrush}"
-                       IsReadOnly="True" Tag="minify-json" GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                       LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus" AutomationProperties.Name="Minify JSON shortcut" />
-              <Button Margin="8,0,0,0" Style="{StaticResource SecondaryButton}" Tag="minify-json" Content="Clear" Click="HandleClearShortcut" />
-            </StackPanel>
-          </Grid>
-          <Grid Margin="0,20,0,0">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel VerticalAlignment="Center">
-              <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Text="Base64 encode" />
-              <TextBlock Margin="0,4,0,0" Foreground="{StaticResource TextSecondaryBrush}" Text="Encode selected text as Base64." />
-            </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-              <TextBox x:Name="Base64EncodeShortcutTextBox" Width="156" Height="36" Padding="10,0"
-                       VerticalContentAlignment="Center" Background="{StaticResource SurfaceRaisedBrush}"
-                       BorderBrush="{StaticResource BorderBrush}" Foreground="{StaticResource TextPrimaryBrush}"
-                       IsReadOnly="True" Tag="base64-encode" GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                       LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus" AutomationProperties.Name="Base64 encode shortcut" />
-              <Button Margin="8,0,0,0" Style="{StaticResource SecondaryButton}" Tag="base64-encode" Content="Clear" Click="HandleClearShortcut" />
-            </StackPanel>
-          </Grid>
-          <Grid Margin="0,20,0,0">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel VerticalAlignment="Center">
-              <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Text="Base64 decode" />
-              <TextBlock Margin="0,4,0,0" Foreground="{StaticResource TextSecondaryBrush}" Text="Decode selected Base64 as UTF-8 text." />
-            </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-              <TextBox x:Name="Base64DecodeShortcutTextBox" Width="156" Height="36" Padding="10,0"
-                       VerticalContentAlignment="Center" Background="{StaticResource SurfaceRaisedBrush}"
-                       BorderBrush="{StaticResource BorderBrush}" Foreground="{StaticResource TextPrimaryBrush}"
-                       IsReadOnly="True" Tag="base64-decode" GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                       LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus" AutomationProperties.Name="Base64 decode shortcut" />
-              <Button Margin="8,0,0,0" Style="{StaticResource SecondaryButton}" Tag="base64-decode" Content="Clear" Click="HandleClearShortcut" />
-            </StackPanel>
-          </Grid>
-          <Grid Margin="0,20,0,0">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel VerticalAlignment="Center">
-              <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Text="URL encode" />
-              <TextBlock Margin="0,4,0,0" Foreground="{StaticResource TextSecondaryBrush}" Text="Percent-encode selected text." />
-            </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-              <TextBox x:Name="UrlEncodeShortcutTextBox" Width="156" Height="36" Padding="10,0"
-                       VerticalContentAlignment="Center" Background="{StaticResource SurfaceRaisedBrush}"
-                       BorderBrush="{StaticResource BorderBrush}" Foreground="{StaticResource TextPrimaryBrush}"
-                       IsReadOnly="True" Tag="url-encode" GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                       LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus" AutomationProperties.Name="URL encode shortcut" />
-              <Button Margin="8,0,0,0" Style="{StaticResource SecondaryButton}" Tag="url-encode" Content="Clear" Click="HandleClearShortcut" />
-            </StackPanel>
-          </Grid>
-          <Grid Margin="0,20,0,0">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel VerticalAlignment="Center">
-              <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Text="URL decode" />
-              <TextBlock Margin="0,4,0,0" Foreground="{StaticResource TextSecondaryBrush}" Text="Decode selected percent-encoded text." />
-            </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-              <TextBox x:Name="UrlDecodeShortcutTextBox" Width="156" Height="36" Padding="10,0"
-                       VerticalContentAlignment="Center" Background="{StaticResource SurfaceRaisedBrush}"
-                       BorderBrush="{StaticResource BorderBrush}" Foreground="{StaticResource TextPrimaryBrush}"
-                       IsReadOnly="True" Tag="url-decode" GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                       LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus" AutomationProperties.Name="URL decode shortcut" />
-              <Button Margin="8,0,0,0" Style="{StaticResource SecondaryButton}" Tag="url-decode" Content="Clear" Click="HandleClearShortcut" />
-            </StackPanel>
-          </Grid>
-          <Grid Margin="0,20,0,0">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel VerticalAlignment="Center">
-              <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Text="Convert to uppercase" />
-              <TextBlock Margin="0,4,0,0" Foreground="{StaticResource TextSecondaryBrush}" Text="Change selected text to uppercase." />
-            </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-              <TextBox x:Name="UppercaseShortcutTextBox" Width="156" Height="36" Padding="10,0"
-                       VerticalContentAlignment="Center" Background="{StaticResource SurfaceRaisedBrush}"
-                       BorderBrush="{StaticResource BorderBrush}" Foreground="{StaticResource TextPrimaryBrush}"
-                       IsReadOnly="True" Tag="uppercase" GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                       LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus" AutomationProperties.Name="Uppercase shortcut" />
-              <Button Margin="8,0,0,0" Style="{StaticResource SecondaryButton}" Tag="uppercase" Content="Clear" Click="HandleClearShortcut" />
-            </StackPanel>
-          </Grid>
-          <Grid Margin="0,20,0,0">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel VerticalAlignment="Center">
-              <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Text="Convert to lowercase" />
-              <TextBlock Margin="0,4,0,0" Foreground="{StaticResource TextSecondaryBrush}" Text="Change selected text to lowercase." />
-            </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-              <TextBox x:Name="LowercaseShortcutTextBox" Width="156" Height="36" Padding="10,0"
-                       VerticalContentAlignment="Center" Background="{StaticResource SurfaceRaisedBrush}"
-                       BorderBrush="{StaticResource BorderBrush}" Foreground="{StaticResource TextPrimaryBrush}"
-                       IsReadOnly="True" Tag="lowercase" GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                       LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus" AutomationProperties.Name="Lowercase shortcut" />
-              <Button Margin="8,0,0,0" Style="{StaticResource SecondaryButton}" Tag="lowercase" Content="Clear" Click="HandleClearShortcut" />
-            </StackPanel>
-          </Grid>
-        </StackPanel>
-        <TextBlock x:Name="ShortcutErrorText"
-                   Margin="0,16,0,0"
-                   Foreground="{StaticResource ErrorBrush}"
-                   TextWrapping="Wrap"
-                   Visibility="Collapsed" />
+            </Border>
+
+            <TextBlock Margin="0,20,0,8" Style="{StaticResource SubtitleText}" Text="Encoding" />
+            <Border Style="{StaticResource PanelCard}">
+              <StackPanel>
+                <controls:SettingRow Title="Base64 encode" Description="Encode selected text as Base64.">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="Base64EncodeShortcutTextBox"
+                             Style="{StaticResource ShortcutTextBox}"
+                             Tag="base64-encode"
+                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
+                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
+                             AutomationProperties.Name="Base64 encode shortcut" />
+                    <Button Style="{StaticResource ClearButton}" Tag="base64-encode" Content="Clear" Click="HandleClearShortcut" />
+                  </StackPanel>
+                </controls:SettingRow>
+                <Border Style="{StaticResource CardDivider}" />
+                <controls:SettingRow Title="Base64 decode" Description="Decode selected Base64 as UTF-8 text.">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="Base64DecodeShortcutTextBox"
+                             Style="{StaticResource ShortcutTextBox}"
+                             Tag="base64-decode"
+                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
+                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
+                             AutomationProperties.Name="Base64 decode shortcut" />
+                    <Button Style="{StaticResource ClearButton}" Tag="base64-decode" Content="Clear" Click="HandleClearShortcut" />
+                  </StackPanel>
+                </controls:SettingRow>
+                <Border Style="{StaticResource CardDivider}" />
+                <controls:SettingRow Title="URL encode" Description="Percent-encode selected text.">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="UrlEncodeShortcutTextBox"
+                             Style="{StaticResource ShortcutTextBox}"
+                             Tag="url-encode"
+                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
+                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
+                             AutomationProperties.Name="URL encode shortcut" />
+                    <Button Style="{StaticResource ClearButton}" Tag="url-encode" Content="Clear" Click="HandleClearShortcut" />
+                  </StackPanel>
+                </controls:SettingRow>
+                <Border Style="{StaticResource CardDivider}" />
+                <controls:SettingRow Title="URL decode" Description="Decode selected percent-encoded text.">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="UrlDecodeShortcutTextBox"
+                             Style="{StaticResource ShortcutTextBox}"
+                             Tag="url-decode"
+                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
+                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
+                             AutomationProperties.Name="URL decode shortcut" />
+                    <Button Style="{StaticResource ClearButton}" Tag="url-decode" Content="Clear" Click="HandleClearShortcut" />
+                  </StackPanel>
+                </controls:SettingRow>
+              </StackPanel>
+            </Border>
+
+            <TextBlock Margin="0,20,0,8" Style="{StaticResource SubtitleText}" Text="Case" />
+            <Border Style="{StaticResource PanelCard}">
+              <StackPanel>
+                <controls:SettingRow Title="Convert to uppercase" Description="Change selected text to uppercase.">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="UppercaseShortcutTextBox"
+                             Style="{StaticResource ShortcutTextBox}"
+                             Tag="uppercase"
+                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
+                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
+                             AutomationProperties.Name="Uppercase shortcut" />
+                    <Button Style="{StaticResource ClearButton}" Tag="uppercase" Content="Clear" Click="HandleClearShortcut" />
+                  </StackPanel>
+                </controls:SettingRow>
+                <Border Style="{StaticResource CardDivider}" />
+                <controls:SettingRow Title="Convert to lowercase" Description="Change selected text to lowercase.">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="LowercaseShortcutTextBox"
+                             Style="{StaticResource ShortcutTextBox}"
+                             Tag="lowercase"
+                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
+                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
+                             AutomationProperties.Name="Lowercase shortcut" />
+                    <Button Style="{StaticResource ClearButton}" Tag="lowercase" Content="Clear" Click="HandleClearShortcut" />
+                  </StackPanel>
+                </controls:SettingRow>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+
+          <TextBlock x:Name="ShortcutErrorText"
+                     Margin="0,12,0,0"
+                     Style="{StaticResource ErrorText}"
+                     Visibility="Collapsed" />
         </StackPanel>
       </ScrollViewer>
-    </Grid>
 
-    <StackPanel Grid.Row="4"
-                HorizontalAlignment="Right"
-                Orientation="Horizontal">
-      <Button Width="100"
-              Margin="0,0,12,0"
-              IsCancel="True"
-              Style="{StaticResource SecondaryButton}"
-              Content="Cancel"
-              Click="HandleCancel" />
-      <Button Width="132"
-              IsDefault="True"
-              Style="{StaticResource PrimaryButton}"
-              Content="Save changes"
-              Click="HandleSave" />
-    </StackPanel>
+      <Border Grid.Row="1"
+              Padding="24,12"
+              BorderBrush="{StaticResource DividerBrush}"
+              BorderThickness="0,1,0,0">
+        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+          <Button Margin="0,0,8,0"
+                  IsCancel="True"
+                  Style="{StaticResource SecondaryButton}"
+                  Content="Cancel"
+                  Click="HandleCancel" />
+          <Button IsDefault="True"
+                  Style="{StaticResource PrimaryButton}"
+                  Content="Save changes"
+                  Click="HandleSave" />
+        </StackPanel>
+      </Border>
+    </Grid>
   </Grid>
 </Window>
