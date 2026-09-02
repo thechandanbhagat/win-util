@@ -45,7 +45,13 @@ internal static class Program
             (nameof(TextTransformationsTests.Base64DecodeRejectsInvalidText), TextTransformationsTests.Base64DecodeRejectsInvalidText),
             (nameof(TextTransformationsTests.UrlEncodeAndDecodeRoundTripText), TextTransformationsTests.UrlEncodeAndDecodeRoundTripText),
             (nameof(TextTransformationsTests.ChangeCaseUsesInvariantCasing), TextTransformationsTests.ChangeCaseUsesInvariantCasing),
-            (nameof(WinUtilTrayIconTests.CreateProducesASystemTraySizedIcon), WinUtilTrayIconTests.CreateProducesASystemTraySizedIcon)
+            (nameof(WinUtilTrayIconTests.CreateProducesASystemTraySizedIcon), WinUtilTrayIconTests.CreateProducesASystemTraySizedIcon),
+            (nameof(SettingsStoreTests.LoadReturnsDefaultsWhenNoFileExists), SettingsStoreTests.LoadReturnsDefaultsWhenNoFileExists),
+            (nameof(SettingsStoreTests.SaveThenLoadRoundTripsSettings), SettingsStoreTests.SaveThenLoadRoundTripsSettings),
+            (nameof(SettingsStoreTests.LoadQuarantinesCorruptJsonAndReturnsDefaults), SettingsStoreTests.LoadQuarantinesCorruptJsonAndReturnsDefaults),
+            (nameof(SettingsStoreTests.LoadTreatsJsonNullAsDefaults), SettingsStoreTests.LoadTreatsJsonNullAsDefaults),
+            (nameof(CrashLogTests.WriteCreatesTheLogDirectoryAndAppendsTheException), CrashLogTests.WriteCreatesTheLogDirectoryAndAppendsTheException),
+            (nameof(CrashLogTests.WriteDoesNotThrowWhenTheLogIsUnwritable), CrashLogTests.WriteDoesNotThrowWhenTheLogIsUnwritable)
         };
         var failures = new List<string>();
 

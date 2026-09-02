@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using WinUtil.Models;
@@ -167,9 +169,9 @@ internal sealed class BatteryStatusProvider : IBatteryStatusProvider
         {
             return new BluetoothBatteryQueryResult([], "Bluetooth battery discovery returned unreadable data.");
         }
-        catch (Exception)
+        catch (Exception exception) when (exception is Win32Exception or InvalidOperationException or IOException)
         {
-            return BluetoothBatteryQueryResult.Failed;
+            return new BluetoothBatteryQueryResult([], $"Bluetooth battery discovery could not start: {exception.Message}");
         }
     }
 
