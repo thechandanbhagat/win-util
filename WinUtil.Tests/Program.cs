@@ -51,7 +51,19 @@ internal static class Program
             (nameof(SettingsStoreTests.LoadQuarantinesCorruptJsonAndReturnsDefaults), SettingsStoreTests.LoadQuarantinesCorruptJsonAndReturnsDefaults),
             (nameof(SettingsStoreTests.LoadTreatsJsonNullAsDefaults), SettingsStoreTests.LoadTreatsJsonNullAsDefaults),
             (nameof(CrashLogTests.WriteCreatesTheLogDirectoryAndAppendsTheException), CrashLogTests.WriteCreatesTheLogDirectoryAndAppendsTheException),
-            (nameof(CrashLogTests.WriteDoesNotThrowWhenTheLogIsUnwritable), CrashLogTests.WriteDoesNotThrowWhenTheLogIsUnwritable)
+            (nameof(CrashLogTests.WriteDoesNotThrowWhenTheLogIsUnwritable), CrashLogTests.WriteDoesNotThrowWhenTheLogIsUnwritable),
+            (nameof(SpotlightShortcutsTests.SupportedActionIdsMatchTheCatalog), SpotlightShortcutsTests.SupportedActionIdsMatchTheCatalog),
+            (nameof(SpotlightShortcutsTests.WithShortcutRoundTripsThroughGetShortcut), SpotlightShortcutsTests.WithShortcutRoundTripsThroughGetShortcut),
+            (nameof(SpotlightShortcutsTests.GetShortcutRejectsUnknownActions), SpotlightShortcutsTests.GetShortcutRejectsUnknownActions),
+            (nameof(ShortcutSettingsViewModelTests.ConstructorExposesEveryCatalogAction), ShortcutSettingsViewModelTests.ConstructorExposesEveryCatalogAction),
+            (nameof(ShortcutSettingsViewModelTests.TextToolGroupsOnlyContainSelectedTextActionsInCatalogOrder), ShortcutSettingsViewModelTests.TextToolGroupsOnlyContainSelectedTextActionsInCatalogOrder),
+            (nameof(ShortcutSettingsViewModelTests.ToSpotlightShortcutsRoundTripsAssignedShortcuts), ShortcutSettingsViewModelTests.ToSpotlightShortcutsRoundTripsAssignedShortcuts),
+            (nameof(ShortcutSettingsViewModelTests.SettingAShortcutUpdatesDisplayTextAndNotifies), ShortcutSettingsViewModelTests.SettingAShortcutUpdatesDisplayTextAndNotifies),
+            (nameof(ShortcutSettingsViewModelTests.SettingTheSameShortcutDoesNotNotify), ShortcutSettingsViewModelTests.SettingTheSameShortcutDoesNotNotify),
+            (nameof(ShortcutFormatterTests.FormatReturnsUnassignedForNull), ShortcutFormatterTests.FormatReturnsUnassignedForNull),
+            (nameof(ShortcutFormatterTests.FormatOrdersModifiersCtrlAltShift), ShortcutFormatterTests.FormatOrdersModifiersCtrlAltShift),
+            (nameof(ShortcutFormatterTests.FormatUsesPlainDigitsForNumberKeys), ShortcutFormatterTests.FormatUsesPlainDigitsForNumberKeys),
+            (nameof(SettingsWindowTests.WindowRendersAShortcutEditorForEveryCatalogAction), SettingsWindowTests.WindowRendersAShortcutEditorForEveryCatalogAction)
         };
         var failures = new List<string>();
 

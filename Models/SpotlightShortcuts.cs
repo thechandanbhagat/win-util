@@ -5,6 +5,22 @@ internal sealed record SpotlightShortcuts
     internal const uint PaletteModifiers = GlobalShortcut.AltModifier;
     internal const uint PaletteVirtualKey = 0x32;
 
+    // JSON shape is one named property per action; this table is the single place that maps action ids onto them.
+    private static readonly IReadOnlyList<ShortcutAccessor> Accessors =
+    [
+        new(SpotlightActionIds.Uuid, shortcuts => shortcuts.Uuid, (shortcuts, value) => shortcuts with { Uuid = value }),
+        new(SpotlightActionIds.Password, shortcuts => shortcuts.Password, (shortcuts, value) => shortcuts with { Password = value }),
+        new(SpotlightActionIds.JwtSecret, shortcuts => shortcuts.JwtSecret, (shortcuts, value) => shortcuts with { JwtSecret = value }),
+        new(SpotlightActionIds.FormatJson, shortcuts => shortcuts.FormatJson, (shortcuts, value) => shortcuts with { FormatJson = value }),
+        new(SpotlightActionIds.MinifyJson, shortcuts => shortcuts.MinifyJson, (shortcuts, value) => shortcuts with { MinifyJson = value }),
+        new(SpotlightActionIds.Base64Encode, shortcuts => shortcuts.Base64Encode, (shortcuts, value) => shortcuts with { Base64Encode = value }),
+        new(SpotlightActionIds.Base64Decode, shortcuts => shortcuts.Base64Decode, (shortcuts, value) => shortcuts with { Base64Decode = value }),
+        new(SpotlightActionIds.UrlEncode, shortcuts => shortcuts.UrlEncode, (shortcuts, value) => shortcuts with { UrlEncode = value }),
+        new(SpotlightActionIds.UrlDecode, shortcuts => shortcuts.UrlDecode, (shortcuts, value) => shortcuts with { UrlDecode = value }),
+        new(SpotlightActionIds.Uppercase, shortcuts => shortcuts.Uppercase, (shortcuts, value) => shortcuts with { Uppercase = value }),
+        new(SpotlightActionIds.Lowercase, shortcuts => shortcuts.Lowercase, (shortcuts, value) => shortcuts with { Lowercase = value })
+    ];
+
     public GlobalShortcut? FormatJson { get; init; }
 
     public GlobalShortcut? Base64Decode { get; init; }
@@ -27,20 +43,17 @@ internal sealed record SpotlightShortcuts
 
     public GlobalShortcut? Uuid { get; init; }
 
-    internal IReadOnlyList<SpotlightShortcutBinding> GetBindings() =>
-    [
-        .. CreateBinding(SpotlightActionIds.Uuid, Uuid),
-        .. CreateBinding(SpotlightActionIds.Password, Password),
-        .. CreateBinding(SpotlightActionIds.JwtSecret, JwtSecret),
-        .. CreateBinding(SpotlightActionIds.FormatJson, FormatJson),
-        .. CreateBinding(SpotlightActionIds.MinifyJson, MinifyJson),
-        .. CreateBinding(SpotlightActionIds.Base64Encode, Base64Encode),
-        .. CreateBinding(SpotlightActionIds.Base64Decode, Base64Decode),
-        .. CreateBinding(SpotlightActionIds.UrlEncode, UrlEncode),
-        .. CreateBinding(SpotlightActionIds.UrlDecode, UrlDecode),
-        .. CreateBinding(SpotlightActionIds.Uppercase, Uppercase),
-        .. CreateBinding(SpotlightActionIds.Lowercase, Lowercase)
-    ];
+    internal static IReadOnlyList<string> SupportedActionIds { get; } = Accessors.Select(accessor => accessor.ActionId).ToArray();
+
+    internal GlobalShortcut? GetShortcut(string actionId) => FindAccessor(actionId).Get(this);
+
+    internal SpotlightShortcuts WithShortcut(string actionId, GlobalShortcut? shortcut) => FindAccessor(actionId).Set(this, shortcut);
+
+    internal IReadOnlyList<SpotlightShortcutBinding> GetBindings() => Accessors
+        .Select(accessor => (accessor.ActionId, Shortcut: accessor.Get(this)))
+        .Where(binding => binding.Shortcut is not null)
+        .Select(binding => new SpotlightShortcutBinding(binding.ActionId, binding.Shortcut!))
+        .ToArray();
 
     internal string? Validate()
     {
@@ -64,24 +77,13 @@ internal sealed record SpotlightShortcuts
         return null;
     }
 
-    internal SpotlightShortcuts Normalize() => this with
-    {
-        FormatJson = NormalizeShortcut(FormatJson),
-        Base64Decode = NormalizeShortcut(Base64Decode),
-        Base64Encode = NormalizeShortcut(Base64Encode),
-        JwtSecret = NormalizeShortcut(JwtSecret),
-        Lowercase = NormalizeShortcut(Lowercase),
-        MinifyJson = NormalizeShortcut(MinifyJson),
-        Password = NormalizeShortcut(Password),
-        Uppercase = NormalizeShortcut(Uppercase),
-        UrlDecode = NormalizeShortcut(UrlDecode),
-        UrlEncode = NormalizeShortcut(UrlEncode),
-        Uuid = NormalizeShortcut(Uuid)
-    };
+    internal SpotlightShortcuts Normalize() => Accessors.Aggregate(
+        this,
+        (shortcuts, accessor) => accessor.Set(shortcuts, NormalizeShortcut(accessor.Get(shortcuts))));
 
-    private static IReadOnlyList<SpotlightShortcutBinding> CreateBinding(string actionId, GlobalShortcut? shortcut) => shortcut is null
-        ? []
-        : [new SpotlightShortcutBinding(actionId, shortcut)];
+    private static ShortcutAccessor FindAccessor(string actionId) =>
+        Accessors.FirstOrDefault(accessor => accessor.ActionId == actionId)
+        ?? throw new ArgumentOutOfRangeException(nameof(actionId), actionId, "Unsupported Spotlight action.");
 
     private static bool IsPaletteShortcut(SpotlightShortcutBinding binding) => binding.Shortcut.Modifiers == PaletteModifiers
         && binding.Shortcut.VirtualKey == PaletteVirtualKey;
@@ -89,6 +91,11 @@ internal sealed record SpotlightShortcuts
     private static GlobalShortcut? NormalizeShortcut(GlobalShortcut? shortcut) => shortcut is { IsValid: true }
         ? shortcut
         : null;
+
+    private sealed record ShortcutAccessor(
+        string ActionId,
+        Func<SpotlightShortcuts, GlobalShortcut?> Get,
+        Func<SpotlightShortcuts, GlobalShortcut?, SpotlightShortcuts> Set);
 }
 
 internal sealed record SpotlightShortcutBinding(string ActionId, GlobalShortcut Shortcut);

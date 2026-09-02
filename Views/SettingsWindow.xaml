@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:controls="clr-namespace:WinUtil.Views.Controls"
+        xmlns:viewModels="clr-namespace:WinUtil.ViewModels"
         Title="WinUtil settings"
         Width="800"
         Height="560"
@@ -95,6 +96,49 @@
     <Style x:Key="SliderRow" TargetType="StackPanel">
       <Setter Property="Margin" Value="0,10" />
     </Style>
+
+    <DataTemplate DataType="{x:Type viewModels:ShortcutSettingViewModel}">
+      <StackPanel Orientation="Horizontal">
+        <TextBox Style="{StaticResource ShortcutTextBox}"
+                 Tag="{Binding ActionId}"
+                 Text="{Binding DisplayText, Mode=OneWay}"
+                 GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
+                 LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
+                 AutomationProperties.Name="{Binding Title, StringFormat={}{0} shortcut}"
+                 AutomationProperties.HelpText="{Binding AutomationHelpText}" />
+        <Button Style="{StaticResource ClearButton}"
+                Tag="{Binding ActionId}"
+                Content="Clear"
+                IsEnabled="{Binding IsAssigned}"
+                Click="HandleClearShortcut" />
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="ShortcutGroupRow" DataType="{x:Type viewModels:ShortcutSettingViewModel}">
+      <StackPanel>
+        <Border x:Name="RowDivider" Style="{StaticResource CardDivider}" />
+        <controls:SettingRow Title="{Binding Title}"
+                             Description="{Binding Description}"
+                             Content="{Binding}" />
+      </StackPanel>
+      <DataTemplate.Triggers>
+        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter}, Path=(ItemsControl.AlternationIndex)}" Value="0">
+          <Setter TargetName="RowDivider" Property="Visibility" Value="Collapsed" />
+        </DataTrigger>
+      </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type viewModels:ShortcutSettingGroup}">
+      <StackPanel Margin="0,0,0,20">
+        <TextBlock Margin="0,0,0,8" Style="{StaticResource SubtitleText}" Text="{Binding Title}" />
+        <Border Style="{StaticResource PanelCard}">
+          <ItemsControl AlternationCount="1000"
+                        Focusable="False"
+                        ItemTemplate="{StaticResource ShortcutGroupRow}"
+                        ItemsSource="{Binding Shortcuts}" />
+        </Border>
+      </StackPanel>
+    </DataTemplate>
   </Window.Resources>
 
   <Grid>
@@ -260,21 +304,8 @@
                 </controls:SettingRow>
                 <Border Style="{StaticResource CardDivider}" />
                 <controls:SettingRow Title="Global shortcut"
-                                     Description="Runs Generate UUID from any app and overrides the matching app shortcut.">
-                  <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="UuidShortcutTextBox"
-                             Style="{StaticResource ShortcutTextBox}"
-                             Tag="uuid"
-                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
-                             AutomationProperties.Name="UUID shortcut"
-                             AutomationProperties.HelpText="Click and press the physical key combination to assign the UUID shortcut." />
-                    <Button Style="{StaticResource ClearButton}"
-                            Tag="uuid"
-                            Content="Clear"
-                            Click="HandleClearShortcut" />
-                  </StackPanel>
-                </controls:SettingRow>
+                                     Description="Runs Generate UUID from any app and overrides the matching app shortcut."
+                                     Content="{Binding Shortcuts[uuid]}" />
               </StackPanel>
             </Border>
           </StackPanel>
@@ -352,21 +383,8 @@
                 </StackPanel>
                 <Border Style="{StaticResource CardDivider}" />
                 <controls:SettingRow Title="Global shortcut"
-                                     Description="Runs Generate password from any app and overrides the matching app shortcut.">
-                  <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="PasswordShortcutTextBox"
-                             Style="{StaticResource ShortcutTextBox}"
-                             Tag="password"
-                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
-                             AutomationProperties.Name="Password shortcut"
-                             AutomationProperties.HelpText="Click and press the physical key combination to assign the password shortcut." />
-                    <Button Style="{StaticResource ClearButton}"
-                            Tag="password"
-                            Content="Clear"
-                            Click="HandleClearShortcut" />
-                  </StackPanel>
-                </controls:SettingRow>
+                                     Description="Runs Generate password from any app and overrides the matching app shortcut."
+                                     Content="{Binding Shortcuts[password]}" />
               </StackPanel>
             </Border>
           </StackPanel>
@@ -393,21 +411,8 @@
                 </controls:SettingRow>
                 <Border Style="{StaticResource CardDivider}" />
                 <controls:SettingRow Title="Global shortcut"
-                                     Description="Runs Generate JWT secret from any app and overrides the matching app shortcut.">
-                  <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="JwtSecretShortcutTextBox"
-                             Style="{StaticResource ShortcutTextBox}"
-                             Tag="jwt-secret"
-                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
-                             AutomationProperties.Name="JWT secret shortcut"
-                             AutomationProperties.HelpText="Click and press the physical key combination to assign the JWT secret shortcut." />
-                    <Button Style="{StaticResource ClearButton}"
-                            Tag="jwt-secret"
-                            Content="Clear"
-                            Click="HandleClearShortcut" />
-                  </StackPanel>
-                </controls:SettingRow>
+                                     Description="Runs Generate JWT secret from any app and overrides the matching app shortcut."
+                                     Content="{Binding Shortcuts[jwt-secret]}" />
               </StackPanel>
             </Border>
           </StackPanel>
@@ -420,117 +425,7 @@
                          Text="Transform selected text in the active app. Each shortcut overrides the matching app command." />
             </StackPanel>
 
-            <TextBlock Margin="0,0,0,8" Style="{StaticResource SubtitleText}" Text="JSON" />
-            <Border Style="{StaticResource PanelCard}">
-              <StackPanel>
-                <controls:SettingRow Title="Format JSON" Description="Pretty-print selected JSON.">
-                  <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="FormatJsonShortcutTextBox"
-                             Style="{StaticResource ShortcutTextBox}"
-                             Tag="format-json"
-                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
-                             AutomationProperties.Name="Format JSON shortcut"
-                             AutomationProperties.HelpText="Click and press the physical key combination to assign the Format JSON shortcut." />
-                    <Button Style="{StaticResource ClearButton}" Tag="format-json" Content="Clear" Click="HandleClearShortcut" />
-                  </StackPanel>
-                </controls:SettingRow>
-                <Border Style="{StaticResource CardDivider}" />
-                <controls:SettingRow Title="Minify JSON" Description="Remove insignificant JSON whitespace.">
-                  <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="MinifyJsonShortcutTextBox"
-                             Style="{StaticResource ShortcutTextBox}"
-                             Tag="minify-json"
-                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
-                             AutomationProperties.Name="Minify JSON shortcut" />
-                    <Button Style="{StaticResource ClearButton}" Tag="minify-json" Content="Clear" Click="HandleClearShortcut" />
-                  </StackPanel>
-                </controls:SettingRow>
-              </StackPanel>
-            </Border>
-
-            <TextBlock Margin="0,20,0,8" Style="{StaticResource SubtitleText}" Text="Encoding" />
-            <Border Style="{StaticResource PanelCard}">
-              <StackPanel>
-                <controls:SettingRow Title="Base64 encode" Description="Encode selected text as Base64.">
-                  <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="Base64EncodeShortcutTextBox"
-                             Style="{StaticResource ShortcutTextBox}"
-                             Tag="base64-encode"
-                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
-                             AutomationProperties.Name="Base64 encode shortcut" />
-                    <Button Style="{StaticResource ClearButton}" Tag="base64-encode" Content="Clear" Click="HandleClearShortcut" />
-                  </StackPanel>
-                </controls:SettingRow>
-                <Border Style="{StaticResource CardDivider}" />
-                <controls:SettingRow Title="Base64 decode" Description="Decode selected Base64 as UTF-8 text.">
-                  <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="Base64DecodeShortcutTextBox"
-                             Style="{StaticResource ShortcutTextBox}"
-                             Tag="base64-decode"
-                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
-                             AutomationProperties.Name="Base64 decode shortcut" />
-                    <Button Style="{StaticResource ClearButton}" Tag="base64-decode" Content="Clear" Click="HandleClearShortcut" />
-                  </StackPanel>
-                </controls:SettingRow>
-                <Border Style="{StaticResource CardDivider}" />
-                <controls:SettingRow Title="URL encode" Description="Percent-encode selected text.">
-                  <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="UrlEncodeShortcutTextBox"
-                             Style="{StaticResource ShortcutTextBox}"
-                             Tag="url-encode"
-                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
-                             AutomationProperties.Name="URL encode shortcut" />
-                    <Button Style="{StaticResource ClearButton}" Tag="url-encode" Content="Clear" Click="HandleClearShortcut" />
-                  </StackPanel>
-                </controls:SettingRow>
-                <Border Style="{StaticResource CardDivider}" />
-                <controls:SettingRow Title="URL decode" Description="Decode selected percent-encoded text.">
-                  <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="UrlDecodeShortcutTextBox"
-                             Style="{StaticResource ShortcutTextBox}"
-                             Tag="url-decode"
-                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
-                             AutomationProperties.Name="URL decode shortcut" />
-                    <Button Style="{StaticResource ClearButton}" Tag="url-decode" Content="Clear" Click="HandleClearShortcut" />
-                  </StackPanel>
-                </controls:SettingRow>
-              </StackPanel>
-            </Border>
-
-            <TextBlock Margin="0,20,0,8" Style="{StaticResource SubtitleText}" Text="Case" />
-            <Border Style="{StaticResource PanelCard}">
-              <StackPanel>
-                <controls:SettingRow Title="Convert to uppercase" Description="Change selected text to uppercase.">
-                  <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="UppercaseShortcutTextBox"
-                             Style="{StaticResource ShortcutTextBox}"
-                             Tag="uppercase"
-                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
-                             AutomationProperties.Name="Uppercase shortcut" />
-                    <Button Style="{StaticResource ClearButton}" Tag="uppercase" Content="Clear" Click="HandleClearShortcut" />
-                  </StackPanel>
-                </controls:SettingRow>
-                <Border Style="{StaticResource CardDivider}" />
-                <controls:SettingRow Title="Convert to lowercase" Description="Change selected text to lowercase.">
-                  <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="LowercaseShortcutTextBox"
-                             Style="{StaticResource ShortcutTextBox}"
-                             Tag="lowercase"
-                             GotKeyboardFocus="HandleShortcutCaptureGotKeyboardFocus"
-                             LostKeyboardFocus="HandleShortcutCaptureLostKeyboardFocus"
-                             AutomationProperties.Name="Lowercase shortcut" />
-                    <Button Style="{StaticResource ClearButton}" Tag="lowercase" Content="Clear" Click="HandleClearShortcut" />
-                  </StackPanel>
-                </controls:SettingRow>
-              </StackPanel>
-            </Border>
+            <ItemsControl Focusable="False" ItemsSource="{Binding TextToolGroups}" />
           </StackPanel>
 
           <TextBlock x:Name="ShortcutErrorText"
