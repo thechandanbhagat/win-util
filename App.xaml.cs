@@ -30,7 +30,7 @@ public partial class App : System.Windows.Application
 
         ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown;
         settingsStore = new SettingsStore();
-        var widget = new WidgetWindow(settingsStore.Load(), settingsStore.Save, new BatteryStatusProvider());
+        var widget = new WidgetWindow(settingsStore.Load(), settingsStore.Save, new BatteryStatusProvider(), new AudioDeviceProvider());
         widgetWindow = widget;
         var spotlightWindow = new SpotlightWindow(() => widget.CurrentSettings);
         spotlightController = new SpotlightController(spotlightWindow, new ForegroundTextInjector(), () => widget.CurrentSettings);

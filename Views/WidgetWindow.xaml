@@ -32,6 +32,7 @@
         <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />
         <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
 
       <Grid>
@@ -167,7 +168,82 @@
         </Grid>
       </Border>
 
-      <Grid Grid.Row="3">
+      <Border Grid.Row="3"
+              Margin="0,0,0,12"
+              Padding="8"
+              Background="{StaticResource SurfaceRaisedBrush}"
+              BorderBrush="{StaticResource BorderBrush}"
+              BorderThickness="1"
+              CornerRadius="10">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="8" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="4" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock FontFamily="Cascadia Mono"
+                       FontSize="9"
+                       FontWeight="SemiBold"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       Text="AUDIO" />
+            <TextBlock x:Name="AudioStatusText"
+                       Grid.Column="1"
+                       FontFamily="Cascadia Mono"
+                       FontSize="9"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       Text="CHECKING" />
+          </Grid>
+          <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock VerticalAlignment="Center"
+                       FontSize="10"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       Text="Output" />
+            <TextBlock x:Name="OutputDeviceText"
+                       Grid.Column="1"
+                       Margin="8,0,0,0"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center"
+                       FontSize="11"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       Text="Checking output device"
+                       TextTrimming="CharacterEllipsis"
+                       ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+          </Grid>
+          <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock VerticalAlignment="Center"
+                       FontSize="10"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       Text="Input" />
+            <TextBlock x:Name="InputDeviceText"
+                       Grid.Column="1"
+                       Margin="8,0,0,0"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center"
+                       FontSize="11"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       Text="Checking input device"
+                       TextTrimming="CharacterEllipsis"
+                       ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+          </Grid>
+        </Grid>
+      </Border>
+
+      <Grid Grid.Row="4">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />

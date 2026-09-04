@@ -11,12 +11,15 @@ namespace WinUtil.Views;
 
 public partial class WidgetWindow : Window
 {
+    private static readonly TimeSpan AudioUpdateInterval = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan AutoHidePollInterval = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan BatteryUpdateInterval = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan ClockUpdateInterval = TimeSpan.FromSeconds(1);
     private static readonly Duration VisibilityFadeDuration = new(TimeSpan.FromMilliseconds(300));
     private const double MinimumVisibleWidgetArea = 48;
 
+    private readonly IAudioDeviceProvider audioDeviceProvider;
+    private readonly DispatcherTimer audioTimer;
     private readonly DispatcherTimer autoHideTimer;
     private readonly IBatteryStatusProvider batteryStatusProvider;
     private readonly DispatcherTimer batteryTimer;
@@ -32,10 +35,12 @@ public partial class WidgetWindow : Window
     internal WidgetWindow(
         WidgetSettings settings,
         Action<WidgetSettings> saveSettings,
-        IBatteryStatusProvider batteryStatusProvider)
+        IBatteryStatusProvider batteryStatusProvider,
+        IAudioDeviceProvider audioDeviceProvider)
     {
         InitializeComponent();
         this.batteryStatusProvider = batteryStatusProvider;
+        this.audioDeviceProvider = audioDeviceProvider;
         currentSettings = settings.Normalize();
         positionPersistence = new WidgetPositionPersistence(() => currentSettings, saveSettings);
         autoHideTimer = new DispatcherTimer { Interval = AutoHidePollInterval };
@@ -44,12 +49,16 @@ public partial class WidgetWindow : Window
         clockTimer.Tick += HandleClockTick;
         batteryTimer = new DispatcherTimer { Interval = BatteryUpdateInterval };
         batteryTimer.Tick += HandleBatteryTimerTick;
+        audioTimer = new DispatcherTimer { Interval = AudioUpdateInterval };
+        audioTimer.Tick += HandleAudioTimerTick;
         LocationChanged += HandleLocationChanged;
         RestorePosition();
         clockTimer.Start();
         batteryTimer.Start();
+        audioTimer.Start();
         ApplySettings(currentSettings);
         _ = UpdateBatteryStatusAsync();
+        UpdateAudioStatus();
     }
 
     internal WidgetSettings CurrentSettings => currentSettings;
@@ -110,6 +119,8 @@ public partial class WidgetWindow : Window
         batteryTimer.Tick -= HandleBatteryTimerTick;
         batteryUpdateCancellation.Cancel();
         batteryUpdateCancellation.Dispose();
+        audioTimer.Stop();
+        audioTimer.Tick -= HandleAudioTimerTick;
         clockTimer.Stop();
         clockTimer.Tick -= HandleClockTick;
         base.OnClosed(e);
@@ -123,6 +134,11 @@ public partial class WidgetWindow : Window
     private async void HandleBatteryTimerTick(object? sender, EventArgs e)
     {
         await UpdateBatteryStatusAsync();
+    }
+
+    private void HandleAudioTimerTick(object? sender, EventArgs e)
+    {
+        UpdateAudioStatus();
     }
 
     private void HandleLocationChanged(object? sender, EventArgs e)
@@ -254,5 +270,14 @@ public partial class WidgetWindow : Window
         {
             isBatteryUpdateInProgress = false;
         }
+    }
+
+    private void UpdateAudioStatus()
+    {
+        var snapshot = audioDeviceProvider.GetSnapshot();
+
+        OutputDeviceText.Text = snapshot.HasOutputDevice ? snapshot.OutputDeviceName : "No active output device";
+        InputDeviceText.Text = snapshot.HasInputDevice ? snapshot.InputDeviceName : "No active input device";
+        AudioStatusText.Text = snapshot.ErrorMessage is null ? "LIVE" : "UNAVAILABLE";
     }
 }
