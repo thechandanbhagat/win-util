@@ -14,9 +14,50 @@ internal sealed class BatteryStatusProvider : IBatteryStatusProvider
 {
     private const byte NoBattery = 128;
     private const byte UnknownBatteryPercentage = byte.MaxValue;
-    private static readonly TimeSpan BluetoothQueryTimeout = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan BluetoothQueryTimeout = TimeSpan.FromSeconds(20);
     private const string BluetoothBatteryCommand = """
         $ErrorActionPreference = 'Stop'
+        Add-Type -AssemblyName System.Runtime.WindowsRuntime
+        [Windows.Devices.Bluetooth.BluetoothLEDevice,Windows.Devices.Bluetooth,ContentType=WindowsRuntime] | Out-Null
+        [Windows.Devices.Bluetooth.BluetoothDevice,Windows.Devices.Bluetooth,ContentType=WindowsRuntime] | Out-Null
+        [Windows.Devices.Bluetooth.BluetoothConnectionStatus,Windows.Devices.Bluetooth,ContentType=WindowsRuntime] | Out-Null
+
+        $asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object {
+            $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1'
+        })[0]
+
+        function Await($WinRtTask, $ResultType) {
+            $asTask = $asTaskGeneric.MakeGenericMethod($ResultType)
+            $netTask = $asTask.Invoke($null, @($WinRtTask))
+            $netTask.Wait(-1) | Out-Null
+            $netTask.Result
+        }
+
+        function Test-BluetoothDeviceConnected([string]$deviceAddressHex, [bool]$isLowEnergy) {
+            try {
+                $address = [Convert]::ToUInt64($deviceAddressHex, 16)
+                $device = if ($isLowEnergy) {
+                    Await ([Windows.Devices.Bluetooth.BluetoothLEDevice]::FromBluetoothAddressAsync($address)) ([Windows.Devices.Bluetooth.BluetoothLEDevice])
+                } else {
+                    Await ([Windows.Devices.Bluetooth.BluetoothDevice]::FromBluetoothAddressAsync($address)) ([Windows.Devices.Bluetooth.BluetoothDevice])
+                }
+
+                if ($null -eq $device) {
+                    return $true
+                }
+
+                try {
+                    return $device.ConnectionStatus -eq [Windows.Devices.Bluetooth.BluetoothConnectionStatus]::Connected
+                }
+                finally {
+                    $device.Dispose()
+                }
+            }
+            catch {
+                return $true
+            }
+        }
+
         $devices = Get-PnpDevice -Class Bluetooth -PresentOnly | Where-Object {
             $_.FriendlyName -and ($_.InstanceId -like 'BTHLE\DEV_*' -or $_.InstanceId -like 'BTHENUM\DEV_*')
         } | ForEach-Object {
@@ -24,7 +65,17 @@ internal sealed class BatteryStatusProvider : IBatteryStatusProvider
             if ($null -ne $battery.Data) {
                 $percentage = [int]$battery.Data
                 if ($percentage -ge 0 -and $percentage -le 100) {
-                    [PSCustomObject]@{ Name = $_.FriendlyName; Percentage = $percentage }
+                    $isLowEnergy = $_.InstanceId -like 'BTHLE\DEV_*'
+                    $addressProperty = Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Bluetooth_DeviceAddress' -ErrorAction SilentlyContinue
+                    $isConnected = if ($addressProperty.Data) {
+                        Test-BluetoothDeviceConnected -deviceAddressHex $addressProperty.Data -isLowEnergy $isLowEnergy
+                    } else {
+                        $true
+                    }
+
+                    if ($isConnected) {
+                        [PSCustomObject]@{ Name = $_.FriendlyName; Percentage = $percentage }
+                    }
                 }
             }
         }
