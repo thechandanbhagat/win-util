@@ -3,24 +3,30 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="clr-namespace:WinUtil.Models"
         Title="WinUtil widget"
-        Width="392"
-        MinHeight="272"
+        Width="320"
+        MinHeight="180"
         SizeToContent="Height"
         AllowsTransparency="True"
         Background="Transparent"
+        FontFamily="{StaticResource BodyFont}"
+        FontSize="{StaticResource FontSizeBody}"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         Topmost="True"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
+        RenderOptions.ClearTypeHint="Enabled"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         MouseEnter="HandleMouseEnter"
         MouseLeave="HandleMouseLeave">
   <Border Margin="12"
-          Padding="16"
+          Padding="16,12"
           BorderBrush="{StaticResource BorderBrush}"
           BorderThickness="1"
-          CornerRadius="20"
+          CornerRadius="{StaticResource CardCornerRadius}"
           Effect="{StaticResource ElevatedShadow}"
+          SnapsToDevicePixels="True"
           MouseLeftButtonDown="HandleDragMove">
     <Border.Background>
       <SolidColorBrush x:Name="WidgetBackgroundBrush"
@@ -30,7 +36,6 @@
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
-        <RowDefinition Height="*" />
         <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
@@ -40,72 +45,33 @@
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <StackPanel Orientation="Horizontal">
-          <Border Width="8"
-                  Height="8"
-                  Margin="0,0,8,0"
-                  VerticalAlignment="Center"
-                  Background="{StaticResource AccentBrush}"
-                  CornerRadius="4" />
-          <TextBlock VerticalAlignment="Center"
-                     FontFamily="Cascadia Mono"
-                     FontSize="10"
-                     FontWeight="SemiBold"
-                     Foreground="{StaticResource TextPrimaryBrush}"
-                     Text="WINUTIL" />
-          <TextBlock Margin="8,0,0,0"
-                     VerticalAlignment="Center"
-                     FontSize="10"
-                     Foreground="{StaticResource TextSecondaryBrush}"
-                     Text="DESKTOP CLOCK" />
-        </StackPanel>
-        <Border Grid.Column="1"
-                Padding="8,4"
-                Background="{StaticResource SurfaceRaisedBrush}"
-                BorderBrush="{StaticResource BorderBrush}"
-                BorderThickness="1"
-                CornerRadius="6">
-          <StackPanel Orientation="Horizontal">
-            <Ellipse Width="6"
-                     Height="6"
-                     Margin="0,0,5,0"
-                     VerticalAlignment="Center"
-                     Fill="{StaticResource SuccessBrush}" />
-            <TextBlock FontFamily="Cascadia Mono"
-                       FontSize="9"
-                       Foreground="{StaticResource TextSecondaryBrush}"
-                       Text="ACTIVE" />
-          </StackPanel>
-        </Border>
+        <TextBlock x:Name="DateText"
+                   VerticalAlignment="Center"
+                   Style="{StaticResource SecondaryText}"
+                   Text="Loading date" />
+        <TextBlock Grid.Column="1"
+                   VerticalAlignment="Center"
+                   Style="{StaticResource CaptionText}"
+                   Text="WinUtil" />
       </Grid>
 
-      <StackPanel Grid.Row="1"
-                  VerticalAlignment="Center">
-        <TextBlock x:Name="TimeText"
-                   FontFamily="Segoe UI Variable Display"
-                   FontSize="46"
-                   FontWeight="SemiBold"
-                   Foreground="{StaticResource TextPrimaryBrush}"
-                   Text="00:00:00" />
-        <Border Height="2"
-                Margin="0,7,0,0"
-                HorizontalAlignment="Left"
-                Background="{StaticResource AccentBrush}"
-                CornerRadius="1"
-                Width="40" />
-      </StackPanel>
+      <TextBlock x:Name="TimeText"
+                 Grid.Row="1"
+                 Margin="0,2,0,0"
+                 FontFamily="{StaticResource DisplayFont}"
+                 FontSize="40"
+                 FontWeight="SemiBold"
+                 Foreground="{StaticResource TextPrimaryBrush}"
+                 Text="00:00:00" />
 
       <Border Grid.Row="2"
-              Margin="0,12,0,12"
-              Padding="8"
-              Background="{StaticResource SurfaceRaisedBrush}"
-              BorderBrush="{StaticResource BorderBrush}"
-              BorderThickness="1"
-              CornerRadius="10">
+              Margin="0,12,0,0"
+              Padding="0,10,0,0"
+              BorderBrush="{StaticResource DividerBrush}"
+              BorderThickness="0,1,0,0">
         <Grid>
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="8" />
             <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
           <Grid>
@@ -113,27 +79,25 @@
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock FontFamily="Cascadia Mono"
-                       FontSize="9"
-                       FontWeight="SemiBold"
-                       Foreground="{StaticResource TextSecondaryBrush}"
-                       Text="BATTERY" />
+            <TextBlock Style="{StaticResource SectionLabelText}"
+                       Margin="0"
+                       Text="Battery" />
             <TextBlock x:Name="BatteryStatusText"
                        Grid.Column="1"
-                       FontFamily="Cascadia Mono"
-                       FontSize="9"
+                       Style="{StaticResource ValueText}"
+                       FontSize="10"
                        Foreground="{StaticResource TextSecondaryBrush}"
                        Text="CHECKING" />
           </Grid>
           <TextBlock x:Name="BatteryEmptyText"
-                     Grid.Row="2"
-                     VerticalAlignment="Center"
-                     Foreground="{StaticResource TextSecondaryBrush}"
+                     Grid.Row="1"
+                     Margin="0,6,0,0"
+                     Style="{StaticResource CaptionText}"
                      Text="No connected devices are reporting battery data."
-                     TextWrapping="Wrap"
                      Visibility="Collapsed" />
           <ItemsControl x:Name="BatteryDevicesItemsControl"
-                        Grid.Row="2"
+                        Grid.Row="1"
+                        Margin="0,6,0,0"
                         AutomationProperties.Name="Battery levels">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
@@ -142,24 +106,21 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="{x:Type models:BatteryDevice}">
-                <Grid Margin="0,0,8,4">
+                <Grid Margin="0,0,12,4">
                   <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                   </Grid.ColumnDefinitions>
                   <TextBlock VerticalAlignment="Center"
-                             FontSize="11"
-                             Foreground="{StaticResource TextPrimaryBrush}"
+                             Style="{StaticResource BaseText}"
+                             FontSize="{StaticResource FontSizeCaption}"
                              Text="{Binding Name}"
                              TextTrimming="CharacterEllipsis"
+                             TextWrapping="NoWrap"
                              ToolTip="{Binding Name}" />
                   <TextBlock Grid.Column="1"
                              Margin="8,0,0,0"
-                             VerticalAlignment="Center"
-                             FontFamily="Cascadia Mono"
-                             FontSize="10"
-                             FontWeight="SemiBold"
-                             Foreground="{StaticResource AccentBrush}"
+                             Style="{StaticResource ValueText}"
                              Text="{Binding Percentage, StringFormat={}{0}%}" />
                 </Grid>
               </DataTemplate>
@@ -169,18 +130,14 @@
       </Border>
 
       <Border Grid.Row="3"
-              Margin="0,0,0,12"
-              Padding="8"
-              Background="{StaticResource SurfaceRaisedBrush}"
-              BorderBrush="{StaticResource BorderBrush}"
-              BorderThickness="1"
-              CornerRadius="10">
+              Margin="0,10,0,0"
+              Padding="0,10,0,0"
+              BorderBrush="{StaticResource DividerBrush}"
+              BorderThickness="0,1,0,0">
         <Grid>
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="8" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="4" />
             <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
           <Grid>
@@ -188,77 +145,56 @@
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock FontFamily="Cascadia Mono"
-                       FontSize="9"
-                       FontWeight="SemiBold"
-                       Foreground="{StaticResource TextSecondaryBrush}"
-                       Text="AUDIO" />
+            <TextBlock Margin="0"
+                       Style="{StaticResource SectionLabelText}"
+                       Text="Audio" />
             <TextBlock x:Name="AudioStatusText"
                        Grid.Column="1"
-                       FontFamily="Cascadia Mono"
-                       FontSize="9"
+                       Style="{StaticResource ValueText}"
+                       FontSize="10"
                        Foreground="{StaticResource TextSecondaryBrush}"
                        Text="CHECKING" />
           </Grid>
-          <Grid Grid.Row="2">
+          <Grid Grid.Row="1"
+                Margin="0,6,0,0">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <TextBlock VerticalAlignment="Center"
-                       FontSize="10"
-                       Foreground="{StaticResource TextSecondaryBrush}"
+                       Style="{StaticResource CaptionText}"
                        Text="Output" />
             <TextBlock x:Name="OutputDeviceText"
                        Grid.Column="1"
                        Margin="8,0,0,0"
                        HorizontalAlignment="Right"
-                       VerticalAlignment="Center"
-                       FontSize="11"
-                       Foreground="{StaticResource TextPrimaryBrush}"
+                       Style="{StaticResource ValueText}"
                        Text="Checking output device"
                        TextTrimming="CharacterEllipsis"
+                       TextWrapping="NoWrap"
                        ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
           </Grid>
-          <Grid Grid.Row="4">
+          <Grid Grid.Row="2"
+                Margin="0,4,0,0">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <TextBlock VerticalAlignment="Center"
-                       FontSize="10"
-                       Foreground="{StaticResource TextSecondaryBrush}"
+                       Style="{StaticResource CaptionText}"
                        Text="Input" />
             <TextBlock x:Name="InputDeviceText"
                        Grid.Column="1"
                        Margin="8,0,0,0"
                        HorizontalAlignment="Right"
-                       VerticalAlignment="Center"
-                       FontSize="11"
-                       Foreground="{StaticResource TextPrimaryBrush}"
+                       Style="{StaticResource ValueText}"
                        Text="Checking input device"
                        TextTrimming="CharacterEllipsis"
+                       TextWrapping="NoWrap"
                        ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
           </Grid>
         </Grid>
       </Border>
-
-      <Grid Grid.Row="4">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
-        <TextBlock x:Name="DateText"
-                   Foreground="{StaticResource TextSecondaryBrush}"
-                   FontSize="12"
-                   Text="Loading date" />
-        <TextBlock Grid.Column="1"
-                   FontFamily="Cascadia Mono"
-                   FontSize="9"
-                   FontWeight="SemiBold"
-                   Foreground="{StaticResource TextSecondaryBrush}"
-                   Text="LOCAL" />
-      </Grid>
     </Grid>
   </Border>
 </Window>

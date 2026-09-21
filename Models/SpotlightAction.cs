@@ -8,6 +8,7 @@ internal sealed class SpotlightAction
 
     private SpotlightAction(
         string id,
+        string category,
         string title,
         string description,
         IReadOnlyList<string> searchTerms,
@@ -15,12 +16,15 @@ internal sealed class SpotlightAction
         Func<string?, string> createOutput)
     {
         Id = id;
+        Category = category;
         Title = title;
         Description = description;
         SearchTerms = searchTerms;
         RequiresSelectedText = requiresSelectedText;
         this.createOutput = createOutput;
     }
+
+    public string Category { get; }
 
     public string Description { get; }
 
@@ -34,18 +38,21 @@ internal sealed class SpotlightAction
 
     internal static SpotlightAction CreateGenerator(
         string id,
+        string category,
         string title,
         string description,
         IReadOnlyList<string> searchTerms,
-        Func<string> generator) => new(id, title, description, searchTerms, false, _ => generator());
+        Func<string> generator) => new(id, category, title, description, searchTerms, false, _ => generator());
 
     internal static SpotlightAction CreateSelectedTextTransformer(
         string id,
+        string category,
         string title,
         string description,
         IReadOnlyList<string> searchTerms,
         Func<string, string> transformer) => new(
         id,
+        category,
         title,
         description,
         searchTerms,
