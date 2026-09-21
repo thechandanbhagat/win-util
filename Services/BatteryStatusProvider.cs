@@ -75,8 +75,10 @@ internal sealed class BatteryStatusProvider : IBatteryStatusProvider
                         $true
                     }
 
-                    if ($isConnected) {
-                        [PSCustomObject]@{ Name = $_.FriendlyName; Percentage = $percentage }
+                    [PSCustomObject]@{
+                        Name = $_.FriendlyName
+                        Percentage = $percentage
+                        IsConnected = $isConnected
                     }
                 }
             }
@@ -151,15 +153,7 @@ internal sealed class BatteryStatusProvider : IBatteryStatusProvider
                 return new BluetoothBatteryQueryResult([], CreateBluetoothErrorMessage(error));
             }
 
-            var queriedDevices = JsonSerializer.Deserialize<BluetoothBatteryDevice[]>(output) ?? [];
-            var devices = queriedDevices
-                .Where(device => !string.IsNullOrWhiteSpace(device.Name) && device.Percentage is >= 0 and <= 100)
-                .GroupBy(device => device.Name.Trim(), StringComparer.OrdinalIgnoreCase)
-                .Select(group => new BatteryDevice(group.Key, group.Max(device => device.Percentage)))
-                .OrderBy(device => device.Name, StringComparer.CurrentCultureIgnoreCase)
-                .ToArray();
-
-            return new BluetoothBatteryQueryResult(devices, null);
+            return new BluetoothBatteryQueryResult(ParseBluetoothDevices(output), null);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -173,6 +167,18 @@ internal sealed class BatteryStatusProvider : IBatteryStatusProvider
         {
             return new BluetoothBatteryQueryResult([], $"Bluetooth battery discovery could not start: {exception.Message}");
         }
+    }
+
+    internal static IReadOnlyList<BatteryDevice> ParseBluetoothDevices(string output)
+    {
+        var queriedDevices = JsonSerializer.Deserialize<BluetoothBatteryDevice[]>(output) ?? [];
+
+        return queriedDevices
+            .Where(device => device.IsConnected && !string.IsNullOrWhiteSpace(device.Name) && device.Percentage is >= 0 and <= 100)
+            .GroupBy(device => device.Name.Trim(), StringComparer.OrdinalIgnoreCase)
+            .Select(group => new BatteryDevice(group.Key, group.Max(device => device.Percentage)))
+            .OrderBy(device => device.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToArray();
     }
 
     private static ProcessStartInfo CreateBluetoothQueryStartInfo()
@@ -213,7 +219,7 @@ internal sealed class BatteryStatusProvider : IBatteryStatusProvider
         public uint BatteryFullLifeTime;
     }
 
-    private sealed record BluetoothBatteryDevice(string Name, int Percentage);
+    private sealed record BluetoothBatteryDevice(string Name, int Percentage, bool IsConnected);
 
     private sealed record BluetoothBatteryQueryResult(IReadOnlyList<BatteryDevice> Devices, string? ErrorMessage)
     {
