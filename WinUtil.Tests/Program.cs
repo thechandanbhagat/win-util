@@ -84,7 +84,19 @@ internal static class Program
             (nameof(NativeWorkbenchWindowTests.WidgetKeepsCompactDeviceRowsAndSavedAppearance), NativeWorkbenchWindowTests.WidgetKeepsCompactDeviceRowsAndSavedAppearance),
             (nameof(NativeWorkbenchWindowTests.WidgetShowsEmptyBatteryAndUnavailableProviders), NativeWorkbenchWindowTests.WidgetShowsEmptyBatteryAndUnavailableProviders),
             (nameof(NativeWorkbenchWindowTests.SpotlightStretchesSelectedResultsAndHandlesNoMatches), NativeWorkbenchWindowTests.SpotlightStretchesSelectedResultsAndHandlesNoMatches),
-            (nameof(NativeWorkbenchWindowTests.SpotlightKeepsLongResultListsAndKeyboardSelectionVisible), NativeWorkbenchWindowTests.SpotlightKeepsLongResultListsAndKeyboardSelectionVisible)
+            (nameof(NativeWorkbenchWindowTests.SpotlightKeepsLongResultListsAndKeyboardSelectionVisible), NativeWorkbenchWindowTests.SpotlightKeepsLongResultListsAndKeyboardSelectionVisible),
+            (nameof(ScreenshotDocumentTests.ConstructorDetachesTheSourceAndPreservesPixelDimensions), ScreenshotDocumentTests.ConstructorDetachesTheSourceAndPreservesPixelDimensions),
+            (nameof(ScreenshotDocumentTests.ConstructorRejectsNullUninitializedAndOversizedSources), ScreenshotDocumentTests.ConstructorRejectsNullUninitializedAndOversizedSources),
+            (nameof(ScreenshotDocumentTests.ConstructorAcceptsTheMaximumDimensionWithABoundedPixelCount), ScreenshotDocumentTests.ConstructorAcceptsTheMaximumDimensionWithABoundedPixelCount),
+            (nameof(ScreenshotDocumentTests.AddRejectsInvalidAnnotationsWithoutChangingHistory), ScreenshotDocumentTests.AddRejectsInvalidAnnotationsWithoutChangingHistory),
+            (nameof(ScreenshotDocumentTests.AddAcceptsMaximumStylesAndTextLength), ScreenshotDocumentTests.AddAcceptsMaximumStylesAndTextLength),
+            (nameof(ScreenshotDocumentTests.UndoAndRedoRestoreRenderedStatesAndHandleEmptyHistory), ScreenshotDocumentTests.UndoAndRedoRestoreRenderedStatesAndHandleEmptyHistory),
+            (nameof(ScreenshotDocumentTests.AddingAfterUndoDiscardsRedoHistory), ScreenshotDocumentTests.AddingAfterUndoDiscardsRedoHistory),
+            (nameof(ScreenshotDocumentTests.RenderDrawsArrowsShapeOutlinesAndText), ScreenshotDocumentTests.RenderDrawsArrowsShapeOutlinesAndText),
+            (nameof(ScreenshotDocumentTests.RenderClipsReversedAndOutOfBoundsSelections), ScreenshotDocumentTests.RenderClipsReversedAndOutOfBoundsSelections),
+            (nameof(ScreenshotDocumentTests.BlurChangesEverySelectedPixelAndPreservesOutsidePixels), ScreenshotDocumentTests.BlurChangesEverySelectedPixelAndPreservesOutsidePixels),
+            (nameof(ScreenshotDocumentTests.BlurFlattensEarlierAnnotationsAndKeepsLaterAnnotationsSharp), ScreenshotDocumentTests.BlurFlattensEarlierAnnotationsAndKeepsLaterAnnotationsSharp),
+            (nameof(ScreenshotDocumentTests.BlurPreservesUniformRegionsSinglePixelsAndOutsideAlpha), ScreenshotDocumentTests.BlurPreservesUniformRegionsSinglePixelsAndOutsideAlpha)
         };
         var failures = new List<string>();
 
