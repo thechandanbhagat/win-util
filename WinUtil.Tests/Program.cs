@@ -30,6 +30,10 @@ internal static class Program
             (nameof(SingleInstanceGateTests.SecondGateDetectsAnExistingInstance), SingleInstanceGateTests.SecondGateDetectsAnExistingInstance),
             (nameof(BatterySnapshotTests.HasDevicesIsFalseForAnEmptySnapshot), BatterySnapshotTests.HasDevicesIsFalseForAnEmptySnapshot),
             (nameof(BatterySnapshotTests.HasDevicesIsTrueWhenABatteryIsAvailable), BatterySnapshotTests.HasDevicesIsTrueWhenABatteryIsAvailable),
+            (nameof(AudioDeviceSnapshotTests.HasDevicesTreatsBlankNamesAsUnavailable), AudioDeviceSnapshotTests.HasDevicesTreatsBlankNamesAsUnavailable),
+            (nameof(AudioDeviceSnapshotTests.HasDevicesRecognizesReportedNames), AudioDeviceSnapshotTests.HasDevicesRecognizesReportedNames),
+            (nameof(BatteryStatusProviderTests.ParseBluetoothDevicesExcludesDisconnectedDevices), BatteryStatusProviderTests.ParseBluetoothDevicesExcludesDisconnectedDevices),
+            (nameof(BatteryStatusProviderTests.ParseBluetoothDevicesNormalizesConnectedDevices), BatteryStatusProviderTests.ParseBluetoothDevicesNormalizesConnectedDevices),
             (nameof(WidgetSettingsTests.NormalizeClampsOpacityValues), WidgetSettingsTests.NormalizeClampsOpacityValues),
             (nameof(WidgetSettingsTests.NormalizeUsesDefaultsForInvalidOpacityValues), WidgetSettingsTests.NormalizeUsesDefaultsForInvalidOpacityValues),
             (nameof(WidgetSettingsTests.NormalizeClampsSpotlightSettingsAndRestoresEmptyCharacterSets), WidgetSettingsTests.NormalizeClampsSpotlightSettingsAndRestoresEmptyCharacterSets),
@@ -45,7 +49,25 @@ internal static class Program
             (nameof(TextTransformationsTests.Base64DecodeRejectsInvalidText), TextTransformationsTests.Base64DecodeRejectsInvalidText),
             (nameof(TextTransformationsTests.UrlEncodeAndDecodeRoundTripText), TextTransformationsTests.UrlEncodeAndDecodeRoundTripText),
             (nameof(TextTransformationsTests.ChangeCaseUsesInvariantCasing), TextTransformationsTests.ChangeCaseUsesInvariantCasing),
-            (nameof(WinUtilTrayIconTests.CreateProducesASystemTraySizedIcon), WinUtilTrayIconTests.CreateProducesASystemTraySizedIcon)
+            (nameof(WinUtilTrayIconTests.CreateProducesASystemTraySizedIcon), WinUtilTrayIconTests.CreateProducesASystemTraySizedIcon),
+            (nameof(SettingsStoreTests.LoadReturnsDefaultsWhenNoFileExists), SettingsStoreTests.LoadReturnsDefaultsWhenNoFileExists),
+            (nameof(SettingsStoreTests.SaveThenLoadRoundTripsSettings), SettingsStoreTests.SaveThenLoadRoundTripsSettings),
+            (nameof(SettingsStoreTests.LoadQuarantinesCorruptJsonAndReturnsDefaults), SettingsStoreTests.LoadQuarantinesCorruptJsonAndReturnsDefaults),
+            (nameof(SettingsStoreTests.LoadTreatsJsonNullAsDefaults), SettingsStoreTests.LoadTreatsJsonNullAsDefaults),
+            (nameof(CrashLogTests.WriteCreatesTheLogDirectoryAndAppendsTheException), CrashLogTests.WriteCreatesTheLogDirectoryAndAppendsTheException),
+            (nameof(CrashLogTests.WriteDoesNotThrowWhenTheLogIsUnwritable), CrashLogTests.WriteDoesNotThrowWhenTheLogIsUnwritable),
+            (nameof(SpotlightShortcutsTests.SupportedActionIdsMatchTheCatalog), SpotlightShortcutsTests.SupportedActionIdsMatchTheCatalog),
+            (nameof(SpotlightShortcutsTests.WithShortcutRoundTripsThroughGetShortcut), SpotlightShortcutsTests.WithShortcutRoundTripsThroughGetShortcut),
+            (nameof(SpotlightShortcutsTests.GetShortcutRejectsUnknownActions), SpotlightShortcutsTests.GetShortcutRejectsUnknownActions),
+            (nameof(ShortcutSettingsViewModelTests.ConstructorExposesEveryCatalogAction), ShortcutSettingsViewModelTests.ConstructorExposesEveryCatalogAction),
+            (nameof(ShortcutSettingsViewModelTests.TextToolGroupsOnlyContainSelectedTextActionsInCatalogOrder), ShortcutSettingsViewModelTests.TextToolGroupsOnlyContainSelectedTextActionsInCatalogOrder),
+            (nameof(ShortcutSettingsViewModelTests.ToSpotlightShortcutsRoundTripsAssignedShortcuts), ShortcutSettingsViewModelTests.ToSpotlightShortcutsRoundTripsAssignedShortcuts),
+            (nameof(ShortcutSettingsViewModelTests.SettingAShortcutUpdatesDisplayTextAndNotifies), ShortcutSettingsViewModelTests.SettingAShortcutUpdatesDisplayTextAndNotifies),
+            (nameof(ShortcutSettingsViewModelTests.SettingTheSameShortcutDoesNotNotify), ShortcutSettingsViewModelTests.SettingTheSameShortcutDoesNotNotify),
+            (nameof(ShortcutFormatterTests.FormatReturnsUnassignedForNull), ShortcutFormatterTests.FormatReturnsUnassignedForNull),
+            (nameof(ShortcutFormatterTests.FormatOrdersModifiersCtrlAltShift), ShortcutFormatterTests.FormatOrdersModifiersCtrlAltShift),
+            (nameof(ShortcutFormatterTests.FormatUsesPlainDigitsForNumberKeys), ShortcutFormatterTests.FormatUsesPlainDigitsForNumberKeys),
+            (nameof(SettingsWindowTests.WindowRendersAShortcutEditorForEveryCatalogAction), SettingsWindowTests.WindowRendersAShortcutEditorForEveryCatalogAction)
         };
         var failures = new List<string>();
 

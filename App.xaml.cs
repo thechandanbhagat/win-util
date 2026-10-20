@@ -1,4 +1,5 @@
 using System.Windows.Interop;
+using System.Windows.Threading;
 using WinUtil.Models;
 using WinUtil.Services;
 using WinUtil.Views;
@@ -9,6 +10,7 @@ public partial class App : System.Windows.Application
 {
     internal const string SpotlightShortcutsUnavailableMessage = "Spotlight shortcuts are unavailable until the desktop widget has started.";
 
+    private readonly CrashLog crashLog = new();
     private SettingsStore? settingsStore;
     private SettingsWindow? settingsWindow;
     private SingleInstanceGate? singleInstanceGate;
@@ -29,14 +31,56 @@ public partial class App : System.Windows.Application
         }
 
         ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown;
+        RegisterUnhandledExceptionHandlers();
+
         settingsStore = new SettingsStore();
-        var widget = new WidgetWindow(settingsStore.Load(), settingsStore.Save, new BatteryStatusProvider(), new AudioDeviceProvider());
+        var loadResult = settingsStore.Load();
+        var widget = new WidgetWindow(
+            loadResult.Settings,
+            settingsStore.Save,
+            new BatteryStatusProvider(),
+            new AudioDeviceProvider());
         widgetWindow = widget;
         var spotlightWindow = new SpotlightWindow(() => widget.CurrentSettings);
         spotlightController = new SpotlightController(spotlightWindow, new ForegroundTextInjector(), () => widget.CurrentSettings);
         trayIconController = new TrayIconController(ShowWidget, ShowSettings, ExitApplication);
         widgetWindow.ShowWidget();
         RegisterSpotlightShortcuts();
+
+        if (loadResult.Warning is not null)
+        {
+            trayIconController.ShowWarning("Settings reset to defaults", loadResult.Warning);
+        }
+    }
+
+    private void RegisterUnhandledExceptionHandlers()
+    {
+        DispatcherUnhandledException += HandleDispatcherUnhandledException;
+        TaskScheduler.UnobservedTaskException += HandleUnobservedTaskException;
+        AppDomain.CurrentDomain.UnhandledException += HandleDomainUnhandledException;
+    }
+
+    private void HandleDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        crashLog.Write("Dispatcher", e.Exception);
+        trayIconController?.ShowWarning(
+            "WinUtil hit an unexpected error",
+            $"{e.Exception.Message} Details were written to {crashLog.LogFilePath}.");
+        e.Handled = true;
+    }
+
+    private void HandleUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    {
+        crashLog.Write("Task", e.Exception);
+        e.SetObserved();
+    }
+
+    private void HandleDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        if (e.ExceptionObject is Exception exception)
+        {
+            crashLog.Write("AppDomain", exception);
+        }
     }
 
     protected override void OnExit(System.Windows.ExitEventArgs e)

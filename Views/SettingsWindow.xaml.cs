@@ -1,7 +1,7 @@
 using System.Windows;
-using System.Windows.Input;
 using WinUtil.Models;
 using WinUtil.Services;
+using WinUtil.ViewModels;
 using Button = System.Windows.Controls.Button;
 using TextBox = System.Windows.Controls.TextBox;
 
@@ -20,21 +20,11 @@ public partial class SettingsWindow : Window
 
     private readonly WidgetSettings initialSettings;
     private readonly SettingsStore settingsStore;
+    private readonly ShortcutSettingsViewModel shortcutSettings;
     private readonly Action<Action<ShortcutCaptureResult>> beginShortcutCapture;
     private readonly Action endShortcutCapture;
     private readonly Func<SpotlightShortcuts, string?> tryApplySpotlightShortcuts;
     private bool isChangingSettingsPage;
-    private GlobalShortcut? base64DecodeShortcut;
-    private GlobalShortcut? base64EncodeShortcut;
-    private GlobalShortcut? formatJsonShortcut;
-    private GlobalShortcut? jwtSecretShortcut;
-    private GlobalShortcut? lowercaseShortcut;
-    private GlobalShortcut? minifyJsonShortcut;
-    private GlobalShortcut? passwordShortcut;
-    private GlobalShortcut? uppercaseShortcut;
-    private GlobalShortcut? urlDecodeShortcut;
-    private GlobalShortcut? urlEncodeShortcut;
-    private GlobalShortcut? uuidShortcut;
 
     internal SettingsWindow(
         SettingsStore settingsStore,
@@ -48,6 +38,8 @@ public partial class SettingsWindow : Window
         this.tryApplySpotlightShortcuts = tryApplySpotlightShortcuts;
         this.beginShortcutCapture = beginShortcutCapture;
         this.endShortcutCapture = endShortcutCapture;
+        shortcutSettings = new ShortcutSettingsViewModel(SpotlightActionCatalog.All, settings.SpotlightShortcuts);
+        DataContext = shortcutSettings;
         InitializeComponent();
 
         KeepOnTopCheckBox.IsChecked = settings.KeepOnTop;
@@ -70,28 +62,6 @@ public partial class SettingsWindow : Window
             WidgetSettings.JwtSecretBytesFor512Bits => JwtSecret512BitOptionIndex,
             _ => JwtSecret256BitOptionIndex
         };
-        uuidShortcut = settings.SpotlightShortcuts.Uuid;
-        passwordShortcut = settings.SpotlightShortcuts.Password;
-        jwtSecretShortcut = settings.SpotlightShortcuts.JwtSecret;
-        formatJsonShortcut = settings.SpotlightShortcuts.FormatJson;
-        minifyJsonShortcut = settings.SpotlightShortcuts.MinifyJson;
-        base64EncodeShortcut = settings.SpotlightShortcuts.Base64Encode;
-        base64DecodeShortcut = settings.SpotlightShortcuts.Base64Decode;
-        urlEncodeShortcut = settings.SpotlightShortcuts.UrlEncode;
-        urlDecodeShortcut = settings.SpotlightShortcuts.UrlDecode;
-        uppercaseShortcut = settings.SpotlightShortcuts.Uppercase;
-        lowercaseShortcut = settings.SpotlightShortcuts.Lowercase;
-        UpdateShortcutText(SpotlightActionIds.Uuid);
-        UpdateShortcutText(SpotlightActionIds.Password);
-        UpdateShortcutText(SpotlightActionIds.JwtSecret);
-        UpdateShortcutText(SpotlightActionIds.FormatJson);
-        UpdateShortcutText(SpotlightActionIds.MinifyJson);
-        UpdateShortcutText(SpotlightActionIds.Base64Encode);
-        UpdateShortcutText(SpotlightActionIds.Base64Decode);
-        UpdateShortcutText(SpotlightActionIds.UrlEncode);
-        UpdateShortcutText(SpotlightActionIds.UrlDecode);
-        UpdateShortcutText(SpotlightActionIds.Uppercase);
-        UpdateShortcutText(SpotlightActionIds.Lowercase);
         SettingsNavigationListBox.SelectedIndex = 0;
     }
 
@@ -194,20 +164,7 @@ public partial class SettingsWindow : Window
             PasswordIncludesUppercase = PasswordIncludesUppercaseCheckBox.IsChecked ?? WidgetSettings.Default.PasswordIncludesUppercase,
             PasswordLength = (int)PasswordLengthSlider.Value,
             ShowSeconds = ShowSecondsCheckBox.IsChecked ?? WidgetSettings.Default.ShowSeconds,
-            SpotlightShortcuts = new SpotlightShortcuts
-            {
-                FormatJson = formatJsonShortcut,
-                Base64Decode = base64DecodeShortcut,
-                Base64Encode = base64EncodeShortcut,
-                JwtSecret = jwtSecretShortcut,
-                Lowercase = lowercaseShortcut,
-                MinifyJson = minifyJsonShortcut,
-                Password = passwordShortcut,
-                Uppercase = uppercaseShortcut,
-                UrlDecode = urlDecodeShortcut,
-                UrlEncode = urlEncodeShortcut,
-                Uuid = uuidShortcut
-            },
+            SpotlightShortcuts = shortcutSettings.ToSpotlightShortcuts(),
             Top = initialSettings.Top,
             UuidVersion = UuidVersionComboBox.SelectedIndex == 1 ? UuidVersion.Version7 : UuidVersion.Version4
         };
@@ -237,7 +194,7 @@ public partial class SettingsWindow : Window
             throw new InvalidOperationException("The shortcut clear button must identify a Spotlight action.");
         }
 
-        SetShortcut(actionId, null);
+        shortcutSettings[actionId].Shortcut = null;
         ShortcutErrorText.Visibility = Visibility.Collapsed;
     }
 
@@ -262,146 +219,15 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        if (result.Shortcut is null)
-        {
-            throw new InvalidOperationException("A shortcut capture result must include a shortcut or an error.");
-        }
-
-        SetShortcut(actionId, result.Shortcut);
+        shortcutSettings[actionId].Shortcut = result.Shortcut
+            ?? throw new InvalidOperationException("A shortcut capture result must include a shortcut or an error.");
         ShortcutErrorText.Visibility = Visibility.Collapsed;
-    }
-
-    private static string FormatShortcut(GlobalShortcut? shortcut)
-    {
-        if (shortcut is null)
-        {
-            return "Not assigned";
-        }
-
-        var parts = new List<string>();
-
-        if ((shortcut.Modifiers & GlobalShortcut.ControlModifier) != 0)
-        {
-            parts.Add("Ctrl");
-        }
-
-        if ((shortcut.Modifiers & GlobalShortcut.AltModifier) != 0)
-        {
-            parts.Add("Alt");
-        }
-
-        if ((shortcut.Modifiers & GlobalShortcut.ShiftModifier) != 0)
-        {
-            parts.Add("Shift");
-        }
-
-        parts.Add(FormatKey(KeyInterop.KeyFromVirtualKey((int)shortcut.VirtualKey)));
-        return string.Join('+', parts);
-    }
-
-    private static string FormatKey(Key key) => key switch
-    {
-        Key.D0 => "0",
-        Key.D1 => "1",
-        Key.D2 => "2",
-        Key.D3 => "3",
-        Key.D4 => "4",
-        Key.D5 => "5",
-        Key.D6 => "6",
-        Key.D7 => "7",
-        Key.D8 => "8",
-        Key.D9 => "9",
-        Key.OemMinus => "-",
-        Key.OemPlus => "+",
-        Key.OemQuestion => "/",
-        _ => key.ToString()
-    };
-
-    private GlobalShortcut? GetShortcut(string actionId) => actionId switch
-    {
-        SpotlightActionIds.Uuid => uuidShortcut,
-        SpotlightActionIds.Password => passwordShortcut,
-        SpotlightActionIds.JwtSecret => jwtSecretShortcut,
-        SpotlightActionIds.FormatJson => formatJsonShortcut,
-        SpotlightActionIds.MinifyJson => minifyJsonShortcut,
-        SpotlightActionIds.Base64Encode => base64EncodeShortcut,
-        SpotlightActionIds.Base64Decode => base64DecodeShortcut,
-        SpotlightActionIds.UrlEncode => urlEncodeShortcut,
-        SpotlightActionIds.UrlDecode => urlDecodeShortcut,
-        SpotlightActionIds.Uppercase => uppercaseShortcut,
-        SpotlightActionIds.Lowercase => lowercaseShortcut,
-        _ => throw new ArgumentOutOfRangeException(nameof(actionId), actionId, "Unsupported Spotlight action.")
-    };
-
-    private void SetShortcut(string actionId, GlobalShortcut? shortcut)
-    {
-        switch (actionId)
-        {
-            case SpotlightActionIds.Uuid:
-                uuidShortcut = shortcut;
-                break;
-            case SpotlightActionIds.Password:
-                passwordShortcut = shortcut;
-                break;
-            case SpotlightActionIds.JwtSecret:
-                jwtSecretShortcut = shortcut;
-                break;
-            case SpotlightActionIds.FormatJson:
-                formatJsonShortcut = shortcut;
-                break;
-            case SpotlightActionIds.MinifyJson:
-                minifyJsonShortcut = shortcut;
-                break;
-            case SpotlightActionIds.Base64Encode:
-                base64EncodeShortcut = shortcut;
-                break;
-            case SpotlightActionIds.Base64Decode:
-                base64DecodeShortcut = shortcut;
-                break;
-            case SpotlightActionIds.UrlEncode:
-                urlEncodeShortcut = shortcut;
-                break;
-            case SpotlightActionIds.UrlDecode:
-                urlDecodeShortcut = shortcut;
-                break;
-            case SpotlightActionIds.Uppercase:
-                uppercaseShortcut = shortcut;
-                break;
-            case SpotlightActionIds.Lowercase:
-                lowercaseShortcut = shortcut;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(actionId), actionId, "Unsupported Spotlight action.");
-        }
-
-        UpdateShortcutText(actionId);
     }
 
     private void ShowShortcutError(string message)
     {
         ShortcutErrorText.Text = message;
         ShortcutErrorText.Visibility = Visibility.Visible;
-    }
-
-    private void UpdateShortcutText(string actionId)
-    {
-        var textBox = actionId switch
-        {
-            SpotlightActionIds.Uuid => UuidShortcutTextBox,
-            SpotlightActionIds.Password => PasswordShortcutTextBox,
-            SpotlightActionIds.JwtSecret => JwtSecretShortcutTextBox,
-            SpotlightActionIds.FormatJson => FormatJsonShortcutTextBox,
-            SpotlightActionIds.MinifyJson => MinifyJsonShortcutTextBox,
-            SpotlightActionIds.Base64Encode => Base64EncodeShortcutTextBox,
-            SpotlightActionIds.Base64Decode => Base64DecodeShortcutTextBox,
-            SpotlightActionIds.UrlEncode => UrlEncodeShortcutTextBox,
-            SpotlightActionIds.UrlDecode => UrlDecodeShortcutTextBox,
-            SpotlightActionIds.Uppercase => UppercaseShortcutTextBox,
-            SpotlightActionIds.Lowercase => LowercaseShortcutTextBox,
-            _ => throw new ArgumentOutOfRangeException(nameof(actionId), actionId, "Unsupported Spotlight action.")
-        };
-
-        textBox.Text = FormatShortcut(GetShortcut(actionId));
     }
 
     private void ShowSettingsPage(SettingsPage page)

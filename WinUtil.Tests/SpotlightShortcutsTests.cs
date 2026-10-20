@@ -1,4 +1,5 @@
 using WinUtil.Models;
+using WinUtil.Services;
 
 namespace WinUtil.Tests;
 
@@ -44,6 +45,41 @@ internal static class SpotlightShortcutsTests
         var error = shortcuts.Validate();
 
         TestAssert.Equal("Each Spotlight function needs a different shortcut.", error);
+    }
+
+    internal static void SupportedActionIdsMatchTheCatalog()
+    {
+        var catalogIds = SpotlightActionCatalog.All.Select(action => action.Id).Order().ToArray();
+        var shortcutIds = SpotlightShortcuts.SupportedActionIds.Order().ToArray();
+
+        TestAssert.SequenceEqual(catalogIds, shortcutIds);
+    }
+
+    internal static void WithShortcutRoundTripsThroughGetShortcut()
+    {
+        var shortcut = new GlobalShortcut { Modifiers = GlobalShortcut.AltModifier, VirtualKey = LetterJVirtualKey };
+
+        var shortcuts = new SpotlightShortcuts().WithShortcut(SpotlightActionIds.UrlDecode, shortcut);
+
+        TestAssert.Equal(shortcut, shortcuts.GetShortcut(SpotlightActionIds.UrlDecode));
+        TestAssert.Equal(shortcut, shortcuts.UrlDecode);
+        TestAssert.Equal<GlobalShortcut?>(null, shortcuts.GetShortcut(SpotlightActionIds.UrlEncode));
+    }
+
+    internal static void GetShortcutRejectsUnknownActions()
+    {
+        var threw = false;
+
+        try
+        {
+            new SpotlightShortcuts().GetShortcut("not-an-action");
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            threw = true;
+        }
+
+        TestAssert.True(threw);
     }
 
     internal static void ValidateReservesThePaletteShortcut()

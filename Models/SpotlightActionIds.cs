@@ -13,20 +13,12 @@ internal static class SpotlightActionIds
     internal const string UrlDecode = "url-decode";
     internal const string UrlEncode = "url-encode";
     internal const string Uuid = "uuid";
+}
 
-    internal static string GetDisplayName(string actionId) => actionId switch
-    {
-        Uuid => "Generate UUID",
-        Password => "Generate password",
-        JwtSecret => "Generate JWT secret",
-        FormatJson => "Format JSON",
-        MinifyJson => "Minify JSON",
-        Base64Encode => "Base64 encode",
-        Base64Decode => "Base64 decode",
-        UrlEncode => "URL encode",
-        UrlDecode => "URL decode",
-        Uppercase => "Convert to uppercase",
-        Lowercase => "Convert to lowercase",
-        _ => throw new ArgumentOutOfRangeException(nameof(actionId), actionId, "Unsupported Spotlight action.")
-    };
+internal static class SpotlightActionCategories
+{
+    internal const string Case = "Case";
+    internal const string Encoding = "Encoding";
+    internal const string Generators = "Generators";
+    internal const string Json = "JSON";
 }
