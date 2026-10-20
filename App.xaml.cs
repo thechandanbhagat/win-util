@@ -1,6 +1,8 @@
 using System.IO;
+using System.ComponentModel;
 using System.Security;
 using System.Windows.Interop;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using WinUtil.Models;
 using WinUtil.Services;
@@ -11,7 +13,6 @@ namespace WinUtil;
 public partial class App : System.Windows.Application
 {
     internal const string SpotlightShortcutsUnavailableMessage = "Spotlight shortcuts are unavailable until the desktop widget has started.";
-
     internal const string StartupConfigurationArgument = "--configure-startup";
 
     private const int StartupConfigurationSuccessExitCode = 0;
@@ -19,6 +20,8 @@ public partial class App : System.Windows.Application
 
     private readonly CrashLog crashLog = new();
     private readonly StartupRegistration startupRegistration = new();
+    private readonly HashSet<ScreenshotEditorWindow> screenshotEditors = [];
+    private ScreenshotCaptureListener? screenshotCaptureListener;
     private SettingsStore? settingsStore;
     private SettingsWindow? settingsWindow;
     private SingleInstanceGate? singleInstanceGate;
@@ -68,6 +71,7 @@ public partial class App : System.Windows.Application
         trayIconController = new TrayIconController(ShowWidget, ShowSettings, ExitApplication);
         widgetWindow.ShowWidget();
         RegisterSpotlightShortcuts();
+        RegisterScreenshotCapture();
 
         var registrationError = TryApplyStartup(loadResult.Settings.RunAtStartup);
 
@@ -114,6 +118,7 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(System.Windows.ExitEventArgs e)
     {
+        screenshotCaptureListener?.Dispose();
         spotlightShortcutManager?.Dispose();
         spotlightController?.Dispose();
         trayIconController?.Dispose();
@@ -123,6 +128,8 @@ public partial class App : System.Windows.Application
 
     private void ExitApplication()
     {
+        screenshotCaptureListener?.Dispose();
+        screenshotCaptureListener = null;
         spotlightShortcutManager?.Dispose();
         spotlightShortcutManager = null;
         spotlightController?.Dispose();
@@ -146,8 +153,9 @@ public partial class App : System.Windows.Application
                 TryApplySpotlightShortcuts,
                 BeginShortcutCapture,
                 EndShortcutCapture,
-                TryApplyStartup);
-            settingsWindow.SettingsSaved += widgetWindow.ApplySettings;
+                TryApplyStartup,
+                () => widgetWindow.CurrentSettings.ScreenshotEditor);
+            settingsWindow.SettingsSaved += ApplyWidgetSettings;
             settingsWindow.Closed += HandleSettingsWindowClosed;
         }
 
@@ -168,6 +176,89 @@ public partial class App : System.Windows.Application
     private void HandleSettingsWindowClosed(object? sender, EventArgs e)
     {
         settingsWindow = null;
+    }
+
+    private void ApplyWidgetSettings(WidgetSettings settings)
+    {
+        widgetWindow?.ApplySettings(settings);
+        screenshotCaptureListener?.CancelPendingCapture();
+    }
+
+    private void RegisterScreenshotCapture()
+    {
+        if (widgetWindow is null)
+        {
+            return;
+        }
+
+        try
+        {
+            screenshotCaptureListener = new ScreenshotCaptureListener(
+                new WindowInteropHelper(widgetWindow).Handle,
+                () => widgetWindow.CurrentSettings.OpenScreenshotEditorAfterCapture,
+                ShowScreenshotEditor,
+                ReportScreenshotError);
+        }
+        catch (Exception exception) when (exception is Win32Exception or InvalidOperationException or ArgumentException or AggregateException)
+        {
+            ReportScreenshotError(exception);
+        }
+    }
+
+    private void ShowScreenshotEditor(BitmapSource screenshot)
+    {
+        if (widgetWindow is null || !widgetWindow.CurrentSettings.OpenScreenshotEditorAfterCapture)
+        {
+            return;
+        }
+
+        var editor = new ScreenshotEditorWindow(screenshot, widgetWindow.CurrentSettings.ScreenshotEditor);
+        screenshotEditors.Add(editor);
+        editor.Closed += HandleScreenshotEditorClosed;
+        editor.Show();
+        editor.Activate();
+    }
+
+    private void HandleScreenshotEditorClosed(object? sender, EventArgs e)
+    {
+        if (sender is not ScreenshotEditorWindow editor)
+        {
+            return;
+        }
+
+        editor.Closed -= HandleScreenshotEditorClosed;
+        screenshotEditors.Remove(editor);
+
+        if (widgetWindow is null || settingsStore is null)
+        {
+            return;
+        }
+
+        var currentOptions = widgetWindow.CurrentSettings.ScreenshotEditor;
+        var options = editor.Options.MergeChanges(editor.InitialOptions, currentOptions);
+
+        if (options == currentOptions)
+        {
+            return;
+        }
+
+        var settings = widgetWindow.CurrentSettings with { ScreenshotEditor = options };
+
+        try
+        {
+            settingsStore.Save(settings);
+            widgetWindow.ApplySettings(settings);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            ReportScreenshotError(exception);
+        }
+    }
+
+    private void ReportScreenshotError(Exception exception)
+    {
+        crashLog.Write("Screenshot editor", exception);
+        trayIconController?.ShowWarning("Screenshot editor", exception.Message);
     }
 
     private void RegisterSpotlightShortcuts()

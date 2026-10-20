@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using WinUtil.Models;
 using WinUtil.Services;
@@ -12,6 +13,7 @@ namespace WinUtil.Tests;
 internal static class SettingsWindowTests
 {
     private const int ExpectedTextToolGroupCount = 3;
+    private const double StandardDpi = 96;
     private const string ClockWithSeconds = "10:24:36";
     private const string ClockWithoutSeconds = "10:24";
 
@@ -208,6 +210,52 @@ internal static class SettingsWindowTests
         return editedShortcuts;
     }
 
+    internal static void ScreenshotSettingsNavigateAndPersistTheToggle() => RunOnStaThread(() =>
+    {
+        EnsureApplicationResources();
+        using var directory = new TemporaryDirectory();
+        var store = new SettingsStore(directory.PathFor("settings.json"));
+        var window = new SettingsWindow(store, WidgetSettings.Default with { OpenScreenshotEditorAfterCapture = false }, _ => null, _ => { }, () => { }, _ => null);
+
+        try
+        {
+            window.Show();
+            window.SettingsNavigationListBox.SelectedIndex = 1;
+            TestAssert.Equal(Visibility.Visible, window.ScreenshotSettingsPanel.Visibility);
+            TestAssert.Equal(Visibility.Collapsed, window.WidgetSettingsPanel.Visibility);
+            TestAssert.Equal(-1, window.SpotlightNavigationListBox.SelectedIndex);
+            TestAssert.False(window.OpenScreenshotEditorCheckBox.IsChecked == true);
+            window.OpenScreenshotEditorCheckBox.IsChecked = true;
+            SaveSettings(window);
+            TestAssert.True(store.Load().Settings.OpenScreenshotEditorAfterCapture);
+        }
+        finally
+        {
+            window.Close();
+        }
+    });
+
+    internal static void ScreenshotSettingsSavePreservesNewerEditorOptions() => RunOnStaThread(() =>
+    {
+        EnsureApplicationResources();
+        using var directory = new TemporaryDirectory();
+        var store = new SettingsStore(directory.PathFor("settings.json"));
+        var currentOptions = new ScreenshotEditorOptions();
+        var window = new SettingsWindow(store, WidgetSettings.Default, _ => null, _ => { }, () => { }, _ => null, () => currentOptions);
+
+        try
+        {
+            window.Show();
+            currentOptions = currentOptions with { StrokeWidth = 8, BlurRadius = 24 };
+            SaveSettings(window);
+            TestAssert.Equal(currentOptions, store.Load().Settings.ScreenshotEditor);
+        }
+        finally
+        {
+            window.Close();
+        }
+    });
+
     internal static void WidgetAppearancePreviewTracksUnsavedSettingsAndIdleState() => RunOnStaThread(() =>
     {
         EnsureApplicationResources();
@@ -254,7 +302,7 @@ internal static class SettingsWindowTests
             var previewPosition = window.WidgetPreview.TranslatePoint(new Point(), window.SettingsContentScrollViewer);
             TestAssert.True(previewPosition.X >= 0);
             TestAssert.True(previewPosition.X + window.WidgetPreview.ActualWidth <= window.SettingsContentScrollViewer.ActualWidth);
-            window.SpotlightNavigationListBox.SelectedIndex = 0;
+            window.SettingsNavigationListBox.SelectedIndex = 1;
             window.SettingsNavigationListBox.SelectedIndex = 0;
             UpdateBindingsAndLayout(window);
             TestAssert.Equal(ClockWithoutSeconds, window.WidgetPreviewTimeText.Text);
@@ -266,6 +314,64 @@ internal static class SettingsWindowTests
             window.Close();
         }
     });
+
+    internal static void SettingsRenderNativeWorkbenchPreviewsWhenRequested() => RunOnStaThread(() =>
+    {
+        var previewDirectory = Environment.GetEnvironmentVariable("WINUTIL_NATIVE_PREVIEW_DIRECTORY");
+
+        if (string.IsNullOrWhiteSpace(previewDirectory))
+        {
+            return;
+        }
+
+        EnsureApplicationResources();
+        using var directory = new TemporaryDirectory();
+        var window = CreateStartupSettingsWindow(new SettingsStore(directory.PathFor("settings.json")), _ => null);
+
+        try
+        {
+            window.Show();
+            Directory.CreateDirectory(previewDirectory);
+            ExportPreview(window, System.IO.Path.Combine(previewDirectory, "settings-widget.png"));
+            window.SettingsNavigationListBox.SelectedIndex = 1;
+            ExportPreview(window, System.IO.Path.Combine(previewDirectory, "settings-screenshots.png"));
+
+            foreach (var (pageIndex, pageName) in new[] { (0, "uuid"), (1, "password"), (2, "jwt-secret"), (3, "text-tools") })
+            {
+                window.SpotlightNavigationListBox.SelectedIndex = pageIndex;
+                ExportPreview(window, System.IO.Path.Combine(previewDirectory, $"settings-{pageName}.png"));
+            }
+
+            window.SettingsNavigationListBox.SelectedIndex = 0;
+            window.Width = window.MinWidth;
+            window.Height = window.MinHeight;
+            ExportPreview(window, System.IO.Path.Combine(previewDirectory, "settings-widget-compact.png"));
+        }
+        finally
+        {
+            window.Close();
+        }
+    });
+
+    private static void ExportPreview(SettingsWindow window, string path)
+    {
+        UpdateBindingsAndLayout(window);
+        window.SettingsContentScrollViewer.ScrollToTop();
+        UpdateBindingsAndLayout(window);
+        var dpi = VisualTreeHelper.GetDpi(window);
+        var content = (FrameworkElement)window.Content;
+        var rendered = new RenderTargetBitmap(
+            (int)Math.Ceiling(content.ActualWidth * dpi.DpiScaleX),
+            (int)Math.Ceiling(content.ActualHeight * dpi.DpiScaleY),
+            StandardDpi * dpi.DpiScaleX,
+            StandardDpi * dpi.DpiScaleY,
+            PixelFormats.Pbgra32);
+        rendered.Render(content);
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(rendered));
+        using var stream = File.Create(path);
+        encoder.Save(stream);
+    }
 
     private static void UpdateBindingsAndLayout(SettingsWindow window)
     {

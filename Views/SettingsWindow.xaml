@@ -170,6 +170,7 @@
                  SelectionChanged="HandleWidgetNavigationSelectionChanged"
                  AutomationProperties.Name="General settings">
           <ListBoxItem Content="Desktop widget" />
+          <ListBoxItem Content="Screenshots" />
         </ListBox>
 
         <TextBlock Margin="12,0,0,8" Style="{StaticResource SectionLabelText}" Text="Spotlight" />
@@ -352,6 +353,37 @@
                             Style="{StaticResource SettingsCheckBox}" Content="Preview idle state" />
                 </StackPanel>
               </Grid>
+            </Border>
+          </StackPanel>
+
+          <StackPanel x:Name="ScreenshotSettingsPanel" Visibility="Collapsed">
+            <StackPanel Style="{StaticResource PageHeader}">
+              <TextBlock Style="{StaticResource TitleText}" Text="Screenshots" />
+              <TextBlock Margin="0,2,0,0"
+                         Style="{StaticResource SecondaryText}"
+                         Text="Annotate Windows screenshots in WinUtil." />
+            </StackPanel>
+            <TextBlock Style="{StaticResource SettingsGroupHeading}" Text="Capture" />
+            <Border Style="{StaticResource SettingsGroup}">
+              <StackPanel>
+                <controls:SettingRow Title="Open editor after a screenshot"
+                                     Description="Use Win+Shift+S to capture an area, then edit it in WinUtil.">
+                  <CheckBox x:Name="OpenScreenshotEditorCheckBox"
+                            Style="{StaticResource SettingsCheckBox}"
+                            AutomationProperties.Name="Open editor after a screenshot" />
+                </controls:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Margin="0,28,0,8" Style="{StaticResource SubtitleText}" Text="In the editor" />
+            <Border Style="{StaticResource SettingsGroup}">
+              <StackPanel Margin="0,14,0,0">
+                <TextBlock Style="{StaticResource BaseText}"
+                           Text="Arrows, shapes, text and area blur" />
+                <TextBlock Margin="0,5,0,0" Style="{StaticResource SecondaryText}"
+                           Text="Copy the finished image or save a PNG at its original resolution." />
+                <TextBlock Margin="0,16,0,0" Style="{StaticResource SecondaryText}"
+                           Text="Your colour, line width, text size and blur strength are remembered when you close the editor." />
+              </StackPanel>
             </Border>
           </StackPanel>
 

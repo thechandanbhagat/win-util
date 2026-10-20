@@ -24,7 +24,9 @@ internal static class SettingsStoreTests
         {
             ShowSeconds = !WidgetSettings.Default.ShowSeconds,
             PasswordLength = 32,
-            RunAtStartup = false
+            RunAtStartup = false,
+            OpenScreenshotEditorAfterCapture = false,
+            ScreenshotEditor = new ScreenshotEditorOptions { Color = "#FF00FFFF", StrokeWidth = 8, FontSize = 32, BlurRadius = 24 }
         };
 
         store.Save(settings);
@@ -33,6 +35,8 @@ internal static class SettingsStoreTests
         TestAssert.Equal(settings.ShowSeconds, result.Settings.ShowSeconds);
         TestAssert.Equal(32, result.Settings.PasswordLength);
         TestAssert.False(result.Settings.RunAtStartup);
+        TestAssert.False(result.Settings.OpenScreenshotEditorAfterCapture);
+        TestAssert.Equal(settings.ScreenshotEditor, result.Settings.ScreenshotEditor);
         TestAssert.Equal(null, result.Warning);
     }
 
@@ -75,5 +79,21 @@ internal static class SettingsStoreTests
         TestAssert.True(WidgetSettings.Default.RunAtStartup);
         TestAssert.True(result.Settings.RunAtStartup);
         TestAssert.False(result.Settings.ShowSeconds);
+    }
+
+    internal static void LoadRestoresMissingOrNullScreenshotOptions()
+    {
+        using var directory = new TemporaryDirectory();
+        var settingsPath = directory.PathFor("settings.json");
+
+        foreach (var json in new[] { "{}", "{\"ScreenshotEditor\":null}" })
+        {
+            File.WriteAllText(settingsPath, json);
+            var result = new SettingsStore(settingsPath).Load();
+
+            TestAssert.True(result.Settings.OpenScreenshotEditorAfterCapture);
+            TestAssert.Equal(new ScreenshotEditorOptions(), result.Settings.ScreenshotEditor);
+            TestAssert.Equal<string?>(null, result.Warning);
+        }
     }
 }

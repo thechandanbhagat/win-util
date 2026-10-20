@@ -24,6 +24,10 @@ internal sealed record WidgetSettings
 
     public bool RunAtStartup { get; init; } = true;
 
+    public bool OpenScreenshotEditorAfterCapture { get; init; } = true;
+
+    public ScreenshotEditorOptions ScreenshotEditor { get; init; } = new();
+
     public int AutoHideDelaySeconds { get; init; } = DefaultAutoHideDelaySeconds;
 
     public double BackgroundOpacity { get; init; } = MaximumBackgroundOpacity;
@@ -81,6 +85,7 @@ internal sealed record WidgetSettings
             PasswordIncludesSymbols = HasPasswordCharacterSet ? PasswordIncludesSymbols : Default.PasswordIncludesSymbols,
             PasswordIncludesUppercase = HasPasswordCharacterSet ? PasswordIncludesUppercase : Default.PasswordIncludesUppercase,
             PasswordLength = Math.Clamp(PasswordLength, MinimumPasswordLength, MaximumPasswordLength),
+            ScreenshotEditor = (ScreenshotEditor ?? new ScreenshotEditorOptions()).Normalize(),
             SpotlightShortcuts = (SpotlightShortcuts ?? new SpotlightShortcuts()).Normalize(),
             Top = NormalizePosition(Top),
             UuidVersion = Enum.IsDefined(UuidVersion) ? UuidVersion : Default.UuidVersion
