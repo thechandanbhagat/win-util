@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using WinUtil.Models;
 using WinUtil.Services;
@@ -17,6 +18,8 @@ public partial class SettingsWindow : Window
     private const int PasswordSettingsPageIndex = 1;
     private const int JwtSecretSettingsPageIndex = 2;
     private const int TextToolsSettingsPageIndex = 3;
+    private const int WidgetSettingsPageIndex = 0;
+    private const int ScreenshotSettingsPageIndex = 1;
 
     private readonly WidgetSettings initialSettings;
     private readonly SettingsStore settingsStore;
@@ -24,6 +27,8 @@ public partial class SettingsWindow : Window
     private readonly Action<Action<ShortcutCaptureResult>> beginShortcutCapture;
     private readonly Action endShortcutCapture;
     private readonly Func<SpotlightShortcuts, string?> tryApplySpotlightShortcuts;
+    private readonly Func<bool, string?> tryApplyStartup;
+    private readonly Func<ScreenshotEditorOptions> getScreenshotEditorOptions;
     private bool isChangingSettingsPage;
 
     internal SettingsWindow(
@@ -31,18 +36,24 @@ public partial class SettingsWindow : Window
         WidgetSettings settings,
         Func<SpotlightShortcuts, string?> tryApplySpotlightShortcuts,
         Action<Action<ShortcutCaptureResult>> beginShortcutCapture,
-        Action endShortcutCapture)
+        Action endShortcutCapture,
+        Func<bool, string?> tryApplyStartup,
+        Func<ScreenshotEditorOptions>? getScreenshotEditorOptions = null)
     {
         initialSettings = settings;
         this.settingsStore = settingsStore;
         this.tryApplySpotlightShortcuts = tryApplySpotlightShortcuts;
         this.beginShortcutCapture = beginShortcutCapture;
         this.endShortcutCapture = endShortcutCapture;
+        this.tryApplyStartup = tryApplyStartup;
+        this.getScreenshotEditorOptions = getScreenshotEditorOptions ?? (() => settings.ScreenshotEditor);
         shortcutSettings = new ShortcutSettingsViewModel(SpotlightActionCatalog.All, settings.SpotlightShortcuts);
         DataContext = shortcutSettings;
         InitializeComponent();
 
         KeepOnTopCheckBox.IsChecked = settings.KeepOnTop;
+        RunAtStartupCheckBox.IsChecked = settings.RunAtStartup;
+        OpenScreenshotEditorCheckBox.IsChecked = settings.OpenScreenshotEditorAfterCapture;
         ShowSecondsCheckBox.IsChecked = settings.ShowSeconds;
         AutoHideDelayComboBox.SelectedIndex = settings.AutoHideDelaySeconds == WidgetSettings.ShortAutoHideDelaySeconds
             ? 0
@@ -131,7 +142,12 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        ShowSettingsPage(SettingsPage.Widget);
+        ShowSettingsPage(SettingsNavigationListBox.SelectedIndex switch
+        {
+            WidgetSettingsPageIndex => SettingsPage.Widget,
+            ScreenshotSettingsPageIndex => SettingsPage.Screenshots,
+            _ => throw new ArgumentOutOfRangeException(nameof(SettingsNavigationListBox.SelectedIndex))
+        });
     }
 
     private void HandleSave(object sender, RoutedEventArgs e)
@@ -163,6 +179,9 @@ public partial class SettingsWindow : Window
             PasswordIncludesSymbols = PasswordIncludesSymbolsCheckBox.IsChecked ?? WidgetSettings.Default.PasswordIncludesSymbols,
             PasswordIncludesUppercase = PasswordIncludesUppercaseCheckBox.IsChecked ?? WidgetSettings.Default.PasswordIncludesUppercase,
             PasswordLength = (int)PasswordLengthSlider.Value,
+            RunAtStartup = RunAtStartupCheckBox.IsChecked ?? WidgetSettings.Default.RunAtStartup,
+            OpenScreenshotEditorAfterCapture = OpenScreenshotEditorCheckBox.IsChecked ?? WidgetSettings.Default.OpenScreenshotEditorAfterCapture,
+            ScreenshotEditor = getScreenshotEditorOptions(),
             ShowSeconds = ShowSecondsCheckBox.IsChecked ?? WidgetSettings.Default.ShowSeconds,
             SpotlightShortcuts = shortcutSettings.ToSpotlightShortcuts(),
             Top = initialSettings.Top,
@@ -177,9 +196,38 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        settingsStore.Save(settings);
+        var startupError = tryApplyStartup(settings.RunAtStartup);
+
+        if (startupError is not null)
+        {
+            StartupErrorText.Text = RestoreSpotlightShortcuts(startupError);
+            StartupErrorText.Visibility = Visibility.Visible;
+            return;
+        }
+
+        try
+        {
+            settingsStore.Save(settings);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            var rollbackError = tryApplyStartup(initialSettings.RunAtStartup);
+            StartupErrorText.Text = RestoreSpotlightShortcuts($"Settings could not be saved. {exception.Message} {rollbackError}".TrimEnd());
+            StartupErrorText.Visibility = Visibility.Visible;
+            return;
+        }
+
         SettingsSaved?.Invoke(settings);
         Close();
+    }
+
+    private string RestoreSpotlightShortcuts(string errorMessage)
+    {
+        var rollbackError = tryApplySpotlightShortcuts(initialSettings.SpotlightShortcuts);
+
+        return rollbackError is null
+            ? errorMessage
+            : $"{errorMessage} Spotlight shortcuts could not be restored. {rollbackError}";
     }
 
     private bool HasPasswordCharacterSet() => PasswordIncludesDigitsCheckBox.IsChecked == true
@@ -237,11 +285,17 @@ public partial class SettingsWindow : Window
         try
         {
             WidgetSettingsPanel.Visibility = page == SettingsPage.Widget ? Visibility.Visible : Visibility.Collapsed;
+            ScreenshotSettingsPanel.Visibility = page == SettingsPage.Screenshots ? Visibility.Visible : Visibility.Collapsed;
             UuidSettingsPanel.Visibility = page == SettingsPage.Uuid ? Visibility.Visible : Visibility.Collapsed;
             PasswordSettingsPanel.Visibility = page == SettingsPage.Password ? Visibility.Visible : Visibility.Collapsed;
             JwtSecretSettingsPanel.Visibility = page == SettingsPage.JwtSecret ? Visibility.Visible : Visibility.Collapsed;
             TextToolsSettingsPanel.Visibility = page == SettingsPage.TextTools ? Visibility.Visible : Visibility.Collapsed;
-            SettingsNavigationListBox.SelectedIndex = page == SettingsPage.Widget ? 0 : -1;
+            SettingsNavigationListBox.SelectedIndex = page switch
+            {
+                SettingsPage.Widget => WidgetSettingsPageIndex,
+                SettingsPage.Screenshots => ScreenshotSettingsPageIndex,
+                _ => -1
+            };
             SpotlightNavigationListBox.SelectedIndex = page switch
             {
                 SettingsPage.Uuid => UuidSettingsPageIndex,
@@ -250,6 +304,7 @@ public partial class SettingsWindow : Window
                 SettingsPage.TextTools => TextToolsSettingsPageIndex,
                 _ => -1
             };
+            SettingsContentScrollViewer.ScrollToTop();
         }
         finally
         {
@@ -260,6 +315,7 @@ public partial class SettingsWindow : Window
     private enum SettingsPage
     {
         Widget,
+        Screenshots,
         Uuid,
         Password,
         JwtSecret,

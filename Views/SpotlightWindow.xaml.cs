@@ -69,6 +69,14 @@ public partial class SpotlightWindow : Window
 
     private void HandleActionDoubleClick(object sender, MouseButtonEventArgs e) => RequestSelectedAction();
 
+    private void HandleActionSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (ActionResultsListBox.SelectedItem is { } selectedAction)
+        {
+            ActionResultsListBox.ScrollIntoView(selectedAction);
+        }
+    }
+
     private void HandleDeactivated(object? sender, EventArgs e) => Hide();
 
     private void FocusSearchBox()

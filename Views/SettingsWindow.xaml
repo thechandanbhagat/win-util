@@ -5,10 +5,10 @@
         xmlns:controls="clr-namespace:WinUtil.Views.Controls"
         xmlns:viewModels="clr-namespace:WinUtil.ViewModels"
         Title="WinUtil settings"
-        Width="800"
-        Height="560"
-        MinWidth="680"
-        MinHeight="460"
+        Width="960"
+        Height="720"
+        MinWidth="820"
+        MinHeight="600"
         Background="{StaticResource CanvasBrush}"
         FontFamily="{StaticResource BodyFont}"
         FontSize="{StaticResource FontSizeBody}"
@@ -26,7 +26,7 @@
     <sys:Double x:Key="OpacityTickFrequency">0.05</sys:Double>
 
     <Style x:Key="NavigationItem" TargetType="ListBoxItem">
-      <Setter Property="MinHeight" Value="32" />
+      <Setter Property="MinHeight" Value="36" />
       <Setter Property="Margin" Value="0,0,0,2" />
       <Setter Property="Padding" Value="12,0" />
       <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
@@ -58,7 +58,7 @@
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
               </Trigger>
               <Trigger Property="IsSelected" Value="True">
-                <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
+                <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource AccentMutedBrush}" />
                 <Setter TargetName="SelectionBar" Property="Visibility" Value="Visible" />
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
                 <Setter Property="FontWeight" Value="SemiBold" />
@@ -76,12 +76,22 @@
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="Padding" Value="0" />
-      <Setter Property="Margin" Value="0,0,0,16" />
+      <Setter Property="Margin" Value="0,0,0,24" />
       <Setter Property="ItemContainerStyle" Value="{StaticResource NavigationItem}" />
     </Style>
 
     <Style x:Key="PageHeader" TargetType="StackPanel">
-      <Setter Property="Margin" Value="0,0,0,16" />
+      <Setter Property="Margin" Value="0,0,0,28" />
+    </Style>
+
+    <Style x:Key="SettingsGroupHeading" TargetType="TextBlock" BasedOn="{StaticResource SubtitleText}">
+      <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+
+    <Style x:Key="SettingsGroup" TargetType="Border">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="BorderThickness" Value="0,1,0,0" />
+      <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
     </Style>
 
     <Style x:Key="ClearButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
@@ -131,7 +141,7 @@
     <DataTemplate DataType="{x:Type viewModels:ShortcutSettingGroup}">
       <StackPanel Margin="0,0,0,20">
         <TextBlock Margin="0,0,0,8" Style="{StaticResource SubtitleText}" Text="{Binding Title}" />
-        <Border Style="{StaticResource PanelCard}">
+        <Border Style="{StaticResource SettingsGroup}">
           <ItemsControl AlternationCount="1000"
                         Focusable="False"
                         ItemTemplate="{StaticResource ShortcutGroupRow}"
@@ -141,27 +151,29 @@
     </DataTemplate>
   </Window.Resources>
 
-  <Grid>
+  <Grid Background="{StaticResource CanvasBrush}">
     <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="184" />
+      <ColumnDefinition Width="196" />
       <ColumnDefinition Width="*" />
     </Grid.ColumnDefinitions>
 
-    <Border Background="{StaticResource SurfaceBrush}" Padding="12,16">
+    <Border Background="{StaticResource SurfaceBrush}" Padding="12,24"
+            BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,1,0">
       <StackPanel>
-        <TextBlock Margin="8,0,0,16"
-                   Style="{StaticResource TitleText}"
-                   Text="Settings" />
+        <TextBlock Margin="12,0,0,28"
+                   Style="{StaticResource SubtitleText}"
+                   Text="WinUtil" />
 
-        <TextBlock Style="{StaticResource SectionLabelText}" Text="Widget" />
+        <TextBlock Margin="12,0,0,8" Style="{StaticResource SectionLabelText}" Text="General" />
         <ListBox x:Name="SettingsNavigationListBox"
                  Style="{StaticResource NavigationListBox}"
                  SelectionChanged="HandleWidgetNavigationSelectionChanged"
-                 AutomationProperties.Name="Widget settings">
+                 AutomationProperties.Name="General settings">
           <ListBoxItem Content="Desktop widget" />
+          <ListBoxItem Content="Screenshots" />
         </ListBox>
 
-        <TextBlock Style="{StaticResource SectionLabelText}" Text="Spotlight" />
+        <TextBlock Margin="12,0,0,8" Style="{StaticResource SectionLabelText}" Text="Spotlight" />
         <ListBox x:Name="SpotlightNavigationListBox"
                  Style="{StaticResource NavigationListBox}"
                  SelectionChanged="HandleSpotlightNavigationSelectionChanged"
@@ -180,7 +192,7 @@
         <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
 
-      <ScrollViewer Padding="24,20,24,0"
+      <ScrollViewer x:Name="SettingsContentScrollViewer" Padding="32,28,32,0"
                     HorizontalScrollBarVisibility="Disabled"
                     VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="0,0,0,20">
@@ -192,8 +204,16 @@
                          Text="Behaviour and appearance of the always-on clock." />
             </StackPanel>
 
-            <Border Style="{StaticResource PanelCard}">
+            <TextBlock Style="{StaticResource SettingsGroupHeading}" Text="Behaviour" />
+            <Border Style="{StaticResource SettingsGroup}">
               <StackPanel>
+                <controls:SettingRow Title="Run at startup"
+                                     Description="Start WinUtil automatically when you sign in to Windows.">
+                  <CheckBox x:Name="RunAtStartupCheckBox"
+                            Style="{StaticResource SettingsCheckBox}"
+                            AutomationProperties.Name="Run at startup" />
+                </controls:SettingRow>
+                <Border Style="{StaticResource CardDivider}" />
                 <controls:SettingRow Title="Keep above other windows">
                   <CheckBox x:Name="KeepOnTopCheckBox"
                             Style="{StaticResource SettingsCheckBox}"
@@ -218,67 +238,151 @@
               </StackPanel>
             </Border>
 
-            <TextBlock Margin="0,20,0,8"
+            <TextBlock Margin="0,28,0,8"
                        Style="{StaticResource SubtitleText}"
-                       Text="Opacity" />
-            <Border Style="{StaticResource PanelCard}">
+                       Text="Appearance" />
+            <Border Style="{StaticResource SettingsGroup}">
+              <Grid Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="24" />
+                  <ColumnDefinition Width="248" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                  <StackPanel Margin="0,0,0,18">
+                    <Grid>
+                      <TextBlock Style="{StaticResource BaseText}" Text="Widget opacity" />
+                      <TextBlock x:Name="OpacityValueText"
+                                 HorizontalAlignment="Right"
+                                 Style="{StaticResource SliderValueText}"
+                                 Text="100%" />
+                    </Grid>
+                    <Slider x:Name="OpacitySlider"
+                            Margin="0,8,0,0"
+                            Minimum="{StaticResource MinimumWidgetOpacity}"
+                            Maximum="{StaticResource MaximumOpacity}"
+                            TickFrequency="{StaticResource OpacityTickFrequency}"
+                            IsSnapToTickEnabled="True"
+                            Style="{StaticResource SettingsSlider}"
+                            ValueChanged="HandleOpacityValueChanged"
+                            AutomationProperties.Name="Widget opacity" />
+                  </StackPanel>
+                  <StackPanel Margin="0,0,0,18">
+                    <Grid>
+                      <TextBlock Style="{StaticResource BaseText}" Text="Background opacity" />
+                      <TextBlock x:Name="BackgroundOpacityValueText"
+                                 HorizontalAlignment="Right"
+                                 Style="{StaticResource SliderValueText}"
+                                 Text="100%" />
+                    </Grid>
+                    <Slider x:Name="BackgroundOpacitySlider"
+                            Margin="0,8,0,0"
+                            Minimum="{StaticResource MinimumBackgroundOpacity}"
+                            Maximum="{StaticResource MaximumOpacity}"
+                            TickFrequency="{StaticResource OpacityTickFrequency}"
+                            IsSnapToTickEnabled="True"
+                            Style="{StaticResource SettingsSlider}"
+                            ValueChanged="HandleBackgroundOpacityValueChanged"
+                            AutomationProperties.Name="Background opacity" />
+                  </StackPanel>
+                  <StackPanel>
+                    <Grid>
+                      <TextBlock Style="{StaticResource BaseText}" Text="Idle opacity" />
+                      <TextBlock x:Name="FadedOpacityValueText"
+                                 HorizontalAlignment="Right"
+                                 Style="{StaticResource SliderValueText}"
+                                 Text="10%" />
+                    </Grid>
+                    <Slider x:Name="FadedOpacitySlider"
+                            Margin="0,8,0,0"
+                            Minimum="{StaticResource MinimumFadedOpacity}"
+                            Maximum="{StaticResource MaximumFadedOpacity}"
+                            TickFrequency="{StaticResource OpacityTickFrequency}"
+                            IsSnapToTickEnabled="True"
+                            Style="{StaticResource SettingsSlider}"
+                            ValueChanged="HandleFadedOpacityValueChanged"
+                            AutomationProperties.Name="Faded opacity" />
+                  </StackPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                  <Border Background="{StaticResource SurfaceRaisedBrush}"
+                          Padding="12" CornerRadius="{StaticResource ControlCornerRadius}">
+                    <Border x:Name="WidgetPreview" Padding="14,12" CornerRadius="{StaticResource ControlCornerRadius}"
+                            AutomationProperties.Name="Widget appearance preview">
+                      <Border.Background>
+                        <SolidColorBrush Color="{StaticResource Ink900}"
+                                         Opacity="{Binding ElementName=BackgroundOpacitySlider, Path=Value}" />
+                      </Border.Background>
+                      <Border.Style>
+                        <Style TargetType="Border">
+                          <Setter Property="Opacity" Value="{Binding ElementName=OpacitySlider, Path=Value}" />
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding ElementName=PreviewIdleCheckBox, Path=IsChecked}" Value="True">
+                              <Setter Property="Opacity" Value="{Binding ElementName=FadedOpacitySlider, Path=Value}" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </Border.Style>
+                      <StackPanel>
+                        <TextBlock Style="{StaticResource CaptionText}" Text="Friday, 16 October" />
+                        <TextBlock x:Name="WidgetPreviewTimeText" Margin="0,1,0,12"
+                                   FontFamily="{StaticResource DisplayFont}" FontSize="32" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}">
+                          <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                              <Setter Property="Text" Value="10:24" />
+                              <Style.Triggers>
+                                <DataTrigger Binding="{Binding ElementName=ShowSecondsCheckBox, Path=IsChecked}" Value="True">
+                                  <Setter Property="Text" Value="10:24:36" />
+                                </DataTrigger>
+                              </Style.Triggers>
+                            </Style>
+                          </TextBlock.Style>
+                        </TextBlock>
+                        <Grid Margin="0,0,0,8">
+                          <TextBlock Style="{StaticResource CaptionText}" Text="Laptop battery" />
+                          <TextBlock HorizontalAlignment="Right" Style="{StaticResource CaptionText}" Text="87%" />
+                        </Grid>
+                        <Border Style="{StaticResource CardDivider}" />
+                        <TextBlock Margin="0,8,0,3" Style="{StaticResource CaptionText}" Text="Speakers" />
+                        <TextBlock Style="{StaticResource CaptionText}" Text="Microphone array" />
+                      </StackPanel>
+                    </Border>
+                  </Border>
+                  <CheckBox x:Name="PreviewIdleCheckBox" Margin="0,10,0,0"
+                            Style="{StaticResource SettingsCheckBox}" Content="Preview idle state" />
+                </StackPanel>
+              </Grid>
+            </Border>
+          </StackPanel>
+
+          <StackPanel x:Name="ScreenshotSettingsPanel" Visibility="Collapsed">
+            <StackPanel Style="{StaticResource PageHeader}">
+              <TextBlock Style="{StaticResource TitleText}" Text="Screenshots" />
+              <TextBlock Margin="0,2,0,0"
+                         Style="{StaticResource SecondaryText}"
+                         Text="Annotate Windows screenshots in WinUtil." />
+            </StackPanel>
+            <TextBlock Style="{StaticResource SettingsGroupHeading}" Text="Capture" />
+            <Border Style="{StaticResource SettingsGroup}">
               <StackPanel>
-                <StackPanel Style="{StaticResource SliderRow}">
-                  <Grid>
-                    <TextBlock Style="{StaticResource BaseText}" Text="Widget" />
-                    <TextBlock x:Name="OpacityValueText"
-                               HorizontalAlignment="Right"
-                               Style="{StaticResource SliderValueText}"
-                               Text="100%" />
-                  </Grid>
-                  <Slider x:Name="OpacitySlider"
-                          Margin="0,6,0,0"
-                          Minimum="{StaticResource MinimumWidgetOpacity}"
-                          Maximum="{StaticResource MaximumOpacity}"
-                          TickFrequency="{StaticResource OpacityTickFrequency}"
-                          IsSnapToTickEnabled="True"
-                          Style="{StaticResource SettingsSlider}"
-                          ValueChanged="HandleOpacityValueChanged"
-                          AutomationProperties.Name="Widget opacity" />
-                </StackPanel>
-                <Border Style="{StaticResource CardDivider}" />
-                <StackPanel Style="{StaticResource SliderRow}">
-                  <Grid>
-                    <TextBlock Style="{StaticResource BaseText}" Text="Background" />
-                    <TextBlock x:Name="BackgroundOpacityValueText"
-                               HorizontalAlignment="Right"
-                               Style="{StaticResource SliderValueText}"
-                               Text="100%" />
-                  </Grid>
-                  <Slider x:Name="BackgroundOpacitySlider"
-                          Margin="0,6,0,0"
-                          Minimum="{StaticResource MinimumBackgroundOpacity}"
-                          Maximum="{StaticResource MaximumOpacity}"
-                          TickFrequency="{StaticResource OpacityTickFrequency}"
-                          IsSnapToTickEnabled="True"
-                          Style="{StaticResource SettingsSlider}"
-                          ValueChanged="HandleBackgroundOpacityValueChanged"
-                          AutomationProperties.Name="Background opacity" />
-                </StackPanel>
-                <Border Style="{StaticResource CardDivider}" />
-                <StackPanel Style="{StaticResource SliderRow}">
-                  <Grid>
-                    <TextBlock Style="{StaticResource BaseText}" Text="Faded" />
-                    <TextBlock x:Name="FadedOpacityValueText"
-                               HorizontalAlignment="Right"
-                               Style="{StaticResource SliderValueText}"
-                               Text="10%" />
-                  </Grid>
-                  <Slider x:Name="FadedOpacitySlider"
-                          Margin="0,6,0,0"
-                          Minimum="{StaticResource MinimumFadedOpacity}"
-                          Maximum="{StaticResource MaximumFadedOpacity}"
-                          TickFrequency="{StaticResource OpacityTickFrequency}"
-                          IsSnapToTickEnabled="True"
-                          Style="{StaticResource SettingsSlider}"
-                          ValueChanged="HandleFadedOpacityValueChanged"
-                          AutomationProperties.Name="Faded opacity" />
-                </StackPanel>
+                <controls:SettingRow Title="Open editor after a screenshot"
+                                     Description="Use Win+Shift+S to capture an area, then edit it in WinUtil.">
+                  <CheckBox x:Name="OpenScreenshotEditorCheckBox"
+                            Style="{StaticResource SettingsCheckBox}"
+                            AutomationProperties.Name="Open editor after a screenshot" />
+                </controls:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Margin="0,28,0,8" Style="{StaticResource SubtitleText}" Text="In the editor" />
+            <Border Style="{StaticResource SettingsGroup}">
+              <StackPanel Margin="0,14,0,0">
+                <TextBlock Style="{StaticResource BaseText}"
+                           Text="Arrows, shapes, text and area blur" />
+                <TextBlock Margin="0,5,0,0" Style="{StaticResource SecondaryText}"
+                           Text="Copy the finished image or save a PNG at its original resolution." />
+                <TextBlock Margin="0,16,0,0" Style="{StaticResource SecondaryText}"
+                           Text="Your colour, line width, text size and blur strength are remembered when you close the editor." />
               </StackPanel>
             </Border>
           </StackPanel>
@@ -290,7 +394,8 @@
                          Style="{StaticResource SecondaryText}"
                          Text="Choose the UUID version generated by Spotlight." />
             </StackPanel>
-            <Border Style="{StaticResource PanelCard}">
+            <TextBlock Style="{StaticResource SettingsGroupHeading}" Text="Output" />
+            <Border Style="{StaticResource SettingsGroup}">
               <StackPanel>
                 <controls:SettingRow Title="UUID version"
                                      Description="Version 7 sorts by creation time; Version 4 is random.">
@@ -317,7 +422,8 @@
                          Style="{StaticResource SecondaryText}"
                          Text="Choose the length and characters generated by Spotlight." />
             </StackPanel>
-            <Border Style="{StaticResource PanelCard}">
+            <TextBlock Style="{StaticResource SettingsGroupHeading}" Text="Output" />
+            <Border Style="{StaticResource SettingsGroup}">
               <StackPanel>
                 <StackPanel Style="{StaticResource SliderRow}">
                   <Grid>
@@ -396,7 +502,8 @@
                          Style="{StaticResource SecondaryText}"
                          Text="Choose the entropy for the Base64URL secret generated by Spotlight." />
             </StackPanel>
-            <Border Style="{StaticResource PanelCard}">
+            <TextBlock Style="{StaticResource SettingsGroupHeading}" Text="Output" />
+            <Border Style="{StaticResource SettingsGroup}">
               <StackPanel>
                 <controls:SettingRow Title="Secret strength"
                                      Description="256-bit is suitable for HS256; choose a larger value only if your service needs it.">
@@ -432,11 +539,16 @@
                      Margin="0,12,0,0"
                      Style="{StaticResource ErrorText}"
                      Visibility="Collapsed" />
+          <TextBlock x:Name="StartupErrorText"
+                     Margin="0,12,0,0"
+                     Style="{StaticResource ErrorText}"
+                     Visibility="Collapsed" />
         </StackPanel>
       </ScrollViewer>
 
       <Border Grid.Row="1"
-              Padding="24,12"
+              Padding="32,14"
+              Background="{StaticResource SurfaceBrush}"
               BorderBrush="{StaticResource DividerBrush}"
               BorderThickness="0,1,0,0">
         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
