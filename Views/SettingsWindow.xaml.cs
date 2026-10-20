@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using WinUtil.Models;
 using WinUtil.Services;
@@ -24,6 +25,7 @@ public partial class SettingsWindow : Window
     private readonly Action<Action<ShortcutCaptureResult>> beginShortcutCapture;
     private readonly Action endShortcutCapture;
     private readonly Func<SpotlightShortcuts, string?> tryApplySpotlightShortcuts;
+    private readonly Func<bool, string?> tryApplyStartup;
     private bool isChangingSettingsPage;
 
     internal SettingsWindow(
@@ -31,18 +33,21 @@ public partial class SettingsWindow : Window
         WidgetSettings settings,
         Func<SpotlightShortcuts, string?> tryApplySpotlightShortcuts,
         Action<Action<ShortcutCaptureResult>> beginShortcutCapture,
-        Action endShortcutCapture)
+        Action endShortcutCapture,
+        Func<bool, string?> tryApplyStartup)
     {
         initialSettings = settings;
         this.settingsStore = settingsStore;
         this.tryApplySpotlightShortcuts = tryApplySpotlightShortcuts;
         this.beginShortcutCapture = beginShortcutCapture;
         this.endShortcutCapture = endShortcutCapture;
+        this.tryApplyStartup = tryApplyStartup;
         shortcutSettings = new ShortcutSettingsViewModel(SpotlightActionCatalog.All, settings.SpotlightShortcuts);
         DataContext = shortcutSettings;
         InitializeComponent();
 
         KeepOnTopCheckBox.IsChecked = settings.KeepOnTop;
+        RunAtStartupCheckBox.IsChecked = settings.RunAtStartup;
         ShowSecondsCheckBox.IsChecked = settings.ShowSeconds;
         AutoHideDelayComboBox.SelectedIndex = settings.AutoHideDelaySeconds == WidgetSettings.ShortAutoHideDelaySeconds
             ? 0
@@ -163,6 +168,7 @@ public partial class SettingsWindow : Window
             PasswordIncludesSymbols = PasswordIncludesSymbolsCheckBox.IsChecked ?? WidgetSettings.Default.PasswordIncludesSymbols,
             PasswordIncludesUppercase = PasswordIncludesUppercaseCheckBox.IsChecked ?? WidgetSettings.Default.PasswordIncludesUppercase,
             PasswordLength = (int)PasswordLengthSlider.Value,
+            RunAtStartup = RunAtStartupCheckBox.IsChecked ?? WidgetSettings.Default.RunAtStartup,
             ShowSeconds = ShowSecondsCheckBox.IsChecked ?? WidgetSettings.Default.ShowSeconds,
             SpotlightShortcuts = shortcutSettings.ToSpotlightShortcuts(),
             Top = initialSettings.Top,
@@ -177,9 +183,38 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        settingsStore.Save(settings);
+        var startupError = tryApplyStartup(settings.RunAtStartup);
+
+        if (startupError is not null)
+        {
+            StartupErrorText.Text = RestoreSpotlightShortcuts(startupError);
+            StartupErrorText.Visibility = Visibility.Visible;
+            return;
+        }
+
+        try
+        {
+            settingsStore.Save(settings);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            var rollbackError = tryApplyStartup(initialSettings.RunAtStartup);
+            StartupErrorText.Text = RestoreSpotlightShortcuts($"Settings could not be saved. {exception.Message} {rollbackError}".TrimEnd());
+            StartupErrorText.Visibility = Visibility.Visible;
+            return;
+        }
+
         SettingsSaved?.Invoke(settings);
         Close();
+    }
+
+    private string RestoreSpotlightShortcuts(string errorMessage)
+    {
+        var rollbackError = tryApplySpotlightShortcuts(initialSettings.SpotlightShortcuts);
+
+        return rollbackError is null
+            ? errorMessage
+            : $"{errorMessage} Spotlight shortcuts could not be restored. {rollbackError}";
     }
 
     private bool HasPasswordCharacterSet() => PasswordIncludesDigitsCheckBox.IsChecked == true

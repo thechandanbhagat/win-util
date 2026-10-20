@@ -28,6 +28,13 @@ internal static class Program
             (nameof(JsonTextFormatterTests.FormatRejectsInvalidJson), JsonTextFormatterTests.FormatRejectsInvalidJson),
             (nameof(JsonTextFormatterTests.MinifyRemovesInsignificantWhitespace), JsonTextFormatterTests.MinifyRemovesInsignificantWhitespace),
             (nameof(SingleInstanceGateTests.SecondGateDetectsAnExistingInstance), SingleInstanceGateTests.SecondGateDetectsAnExistingInstance),
+            (nameof(StartupRegistrationTests.CreateCommandQuotesTheExecutablePath), StartupRegistrationTests.CreateCommandQuotesTheExecutablePath),
+            (nameof(StartupRegistrationTests.CreateCommandRejectsMissingOrInvalidExecutablePaths), StartupRegistrationTests.CreateCommandRejectsMissingOrInvalidExecutablePaths),
+            (nameof(StartupRegistrationTests.CreateCommandEnforcesTheWindowsRunCommandLimit), StartupRegistrationTests.CreateCommandEnforcesTheWindowsRunCommandLimit),
+            (nameof(StartupRegistrationTests.ApplyRegistersAndUpdatesTheQuotedExecutable), StartupRegistrationTests.ApplyRegistersAndUpdatesTheQuotedExecutable),
+            (nameof(StartupRegistrationTests.ApplyDisablesOnlyWinUtilAndAllowsAnAbsentValue), StartupRegistrationTests.ApplyDisablesOnlyWinUtilAndAllowsAnAbsentValue),
+            (nameof(StartupRegistrationTests.ApplyValidatesBeforeOpeningTheRegistry), StartupRegistrationTests.ApplyValidatesBeforeOpeningTheRegistry),
+            (nameof(StartupRegistrationTests.ApplyReportsRegistryFailures), StartupRegistrationTests.ApplyReportsRegistryFailures),
             (nameof(BatterySnapshotTests.HasDevicesIsFalseForAnEmptySnapshot), BatterySnapshotTests.HasDevicesIsFalseForAnEmptySnapshot),
             (nameof(BatterySnapshotTests.HasDevicesIsTrueWhenABatteryIsAvailable), BatterySnapshotTests.HasDevicesIsTrueWhenABatteryIsAvailable),
             (nameof(AudioDeviceSnapshotTests.HasDevicesTreatsBlankNamesAsUnavailable), AudioDeviceSnapshotTests.HasDevicesTreatsBlankNamesAsUnavailable),
@@ -54,6 +61,7 @@ internal static class Program
             (nameof(SettingsStoreTests.SaveThenLoadRoundTripsSettings), SettingsStoreTests.SaveThenLoadRoundTripsSettings),
             (nameof(SettingsStoreTests.LoadQuarantinesCorruptJsonAndReturnsDefaults), SettingsStoreTests.LoadQuarantinesCorruptJsonAndReturnsDefaults),
             (nameof(SettingsStoreTests.LoadTreatsJsonNullAsDefaults), SettingsStoreTests.LoadTreatsJsonNullAsDefaults),
+            (nameof(SettingsStoreTests.LoadDefaultsStartupToEnabledForExistingSettings), SettingsStoreTests.LoadDefaultsStartupToEnabledForExistingSettings),
             (nameof(CrashLogTests.WriteCreatesTheLogDirectoryAndAppendsTheException), CrashLogTests.WriteCreatesTheLogDirectoryAndAppendsTheException),
             (nameof(CrashLogTests.WriteDoesNotThrowWhenTheLogIsUnwritable), CrashLogTests.WriteDoesNotThrowWhenTheLogIsUnwritable),
             (nameof(SpotlightShortcutsTests.SupportedActionIdsMatchTheCatalog), SpotlightShortcutsTests.SupportedActionIdsMatchTheCatalog),
@@ -67,7 +75,11 @@ internal static class Program
             (nameof(ShortcutFormatterTests.FormatReturnsUnassignedForNull), ShortcutFormatterTests.FormatReturnsUnassignedForNull),
             (nameof(ShortcutFormatterTests.FormatOrdersModifiersCtrlAltShift), ShortcutFormatterTests.FormatOrdersModifiersCtrlAltShift),
             (nameof(ShortcutFormatterTests.FormatUsesPlainDigitsForNumberKeys), ShortcutFormatterTests.FormatUsesPlainDigitsForNumberKeys),
-            (nameof(SettingsWindowTests.WindowRendersAShortcutEditorForEveryCatalogAction), SettingsWindowTests.WindowRendersAShortcutEditorForEveryCatalogAction)
+            (nameof(SettingsWindowTests.WindowRendersAShortcutEditorForEveryCatalogAction), SettingsWindowTests.WindowRendersAShortcutEditorForEveryCatalogAction),
+            (nameof(SettingsWindowTests.StartupSettingAppliesAndPersistsWhenSaved), SettingsWindowTests.StartupSettingAppliesAndPersistsWhenSaved),
+            (nameof(SettingsWindowTests.StartupSettingShowsAnErrorWhenRegistrationFails), SettingsWindowTests.StartupSettingShowsAnErrorWhenRegistrationFails),
+            (nameof(SettingsWindowTests.StartupSettingRollsBackWhenSettingsCannotBeSaved), SettingsWindowTests.StartupSettingRollsBackWhenSettingsCannotBeSaved),
+            (nameof(SettingsWindowTests.FailedSaveReportsShortcutAndStartupRollbackErrors), SettingsWindowTests.FailedSaveReportsShortcutAndStartupRollbackErrors)
         };
         var failures = new List<string>();
 

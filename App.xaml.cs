@@ -1,3 +1,5 @@
+using System.IO;
+using System.Security;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using WinUtil.Models;
@@ -10,7 +12,13 @@ public partial class App : System.Windows.Application
 {
     internal const string SpotlightShortcutsUnavailableMessage = "Spotlight shortcuts are unavailable until the desktop widget has started.";
 
+    internal const string StartupConfigurationArgument = "--configure-startup";
+
+    private const int StartupConfigurationSuccessExitCode = 0;
+    private const int StartupConfigurationFailureExitCode = 1;
+
     private readonly CrashLog crashLog = new();
+    private readonly StartupRegistration startupRegistration = new();
     private SettingsStore? settingsStore;
     private SettingsWindow? settingsWindow;
     private SingleInstanceGate? singleInstanceGate;
@@ -22,6 +30,20 @@ public partial class App : System.Windows.Application
     protected override void OnStartup(System.Windows.StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        if (e.Args.Contains(StartupConfigurationArgument, StringComparer.Ordinal))
+        {
+            var startupSettings = new SettingsStore().Load();
+            var startupError = TryApplyStartup(startupSettings.Settings.RunAtStartup);
+
+            if (startupError is not null)
+            {
+                Console.Error.WriteLine(startupError);
+            }
+
+            Shutdown(startupError is null ? StartupConfigurationSuccessExitCode : StartupConfigurationFailureExitCode);
+            return;
+        }
 
         singleInstanceGate = new SingleInstanceGate("Local\\WinUtil");
         if (!singleInstanceGate.IsPrimaryInstance)
@@ -46,6 +68,13 @@ public partial class App : System.Windows.Application
         trayIconController = new TrayIconController(ShowWidget, ShowSettings, ExitApplication);
         widgetWindow.ShowWidget();
         RegisterSpotlightShortcuts();
+
+        var registrationError = TryApplyStartup(loadResult.Settings.RunAtStartup);
+
+        if (registrationError is not null)
+        {
+            trayIconController.ShowWarning("Windows startup could not be updated", registrationError);
+        }
 
         if (loadResult.Warning is not null)
         {
@@ -116,7 +145,8 @@ public partial class App : System.Windows.Application
                 widgetWindow.CurrentSettings,
                 TryApplySpotlightShortcuts,
                 BeginShortcutCapture,
-                EndShortcutCapture);
+                EndShortcutCapture,
+                TryApplyStartup);
             settingsWindow.SettingsSaved += widgetWindow.ApplySettings;
             settingsWindow.Closed += HandleSettingsWindowClosed;
         }
@@ -164,6 +194,20 @@ public partial class App : System.Windows.Application
     }
 
     private string? TryApplySpotlightShortcuts(SpotlightShortcuts shortcuts) => ApplySpotlightShortcuts(spotlightShortcutManager, shortcuts);
+
+    private string? TryApplyStartup(bool enabled)
+    {
+        try
+        {
+            startupRegistration.Apply(enabled);
+            return null;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or SecurityException or ArgumentException or InvalidOperationException)
+        {
+            crashLog.Write("Windows startup", exception);
+            return $"Windows startup could not be updated. {exception.Message}";
+        }
+    }
 
     private void BeginShortcutCapture(Action<ShortcutCaptureResult> captureCallback)
     {

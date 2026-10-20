@@ -22,6 +22,8 @@ internal sealed record WidgetSettings
 
     public bool KeepOnTop { get; init; } = true;
 
+    public bool RunAtStartup { get; init; } = true;
+
     public int AutoHideDelaySeconds { get; init; } = DefaultAutoHideDelaySeconds;
 
     public double BackgroundOpacity { get; init; } = MaximumBackgroundOpacity;

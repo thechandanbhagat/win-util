@@ -20,13 +20,19 @@ internal static class SettingsStoreTests
     {
         using var directory = new TemporaryDirectory();
         var store = new SettingsStore(directory.PathFor("nested", "settings.json"));
-        var settings = WidgetSettings.Default with { ShowSeconds = !WidgetSettings.Default.ShowSeconds, PasswordLength = 32 };
+        var settings = WidgetSettings.Default with
+        {
+            ShowSeconds = !WidgetSettings.Default.ShowSeconds,
+            PasswordLength = 32,
+            RunAtStartup = false
+        };
 
         store.Save(settings);
         var result = store.Load();
 
         TestAssert.Equal(settings.ShowSeconds, result.Settings.ShowSeconds);
         TestAssert.Equal(32, result.Settings.PasswordLength);
+        TestAssert.False(result.Settings.RunAtStartup);
         TestAssert.Equal(null, result.Warning);
     }
 
@@ -56,5 +62,18 @@ internal static class SettingsStoreTests
 
         TestAssert.Equal(WidgetSettings.Default, result.Settings);
         TestAssert.Equal(null, result.Warning);
+    }
+
+    internal static void LoadDefaultsStartupToEnabledForExistingSettings()
+    {
+        using var directory = new TemporaryDirectory();
+        var settingsPath = directory.PathFor("settings.json");
+        File.WriteAllText(settingsPath, "{\"ShowSeconds\":false}");
+
+        var result = new SettingsStore(settingsPath).Load();
+
+        TestAssert.True(WidgetSettings.Default.RunAtStartup);
+        TestAssert.True(result.Settings.RunAtStartup);
+        TestAssert.False(result.Settings.ShowSeconds);
     }
 }
