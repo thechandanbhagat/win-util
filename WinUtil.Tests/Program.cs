@@ -96,7 +96,17 @@ internal static class Program
             (nameof(ScreenshotDocumentTests.RenderClipsReversedAndOutOfBoundsSelections), ScreenshotDocumentTests.RenderClipsReversedAndOutOfBoundsSelections),
             (nameof(ScreenshotDocumentTests.BlurChangesEverySelectedPixelAndPreservesOutsidePixels), ScreenshotDocumentTests.BlurChangesEverySelectedPixelAndPreservesOutsidePixels),
             (nameof(ScreenshotDocumentTests.BlurFlattensEarlierAnnotationsAndKeepsLaterAnnotationsSharp), ScreenshotDocumentTests.BlurFlattensEarlierAnnotationsAndKeepsLaterAnnotationsSharp),
-            (nameof(ScreenshotDocumentTests.BlurPreservesUniformRegionsSinglePixelsAndOutsideAlpha), ScreenshotDocumentTests.BlurPreservesUniformRegionsSinglePixelsAndOutsideAlpha)
+            (nameof(ScreenshotDocumentTests.BlurPreservesUniformRegionsSinglePixelsAndOutsideAlpha), ScreenshotDocumentTests.BlurPreservesUniformRegionsSinglePixelsAndOutsideAlpha),
+            (nameof(ScreenshotCaptureSessionTests.DisabledCaptureDoesNotArmOrComplete), ScreenshotCaptureSessionTests.DisabledCaptureDoesNotArmOrComplete),
+            (nameof(ScreenshotCaptureSessionTests.UnarmedAndExistingClipboardImagesAreIgnored), ScreenshotCaptureSessionTests.UnarmedAndExistingClipboardImagesAreIgnored),
+            (nameof(ScreenshotCaptureSessionTests.UnrelatedAndOwnClipboardUpdatesCancelCapture), ScreenshotCaptureSessionTests.UnrelatedAndOwnClipboardUpdatesCancelCapture),
+            (nameof(ScreenshotCaptureSessionTests.CaptureExpiresAndCanBeCancelledBeforeOrDuringRead), ScreenshotCaptureSessionTests.CaptureExpiresAndCanBeCancelledBeforeOrDuringRead),
+            (nameof(ScreenshotCaptureSessionTests.CapturesAreConsumedOnceAndDuplicateNotificationsAreIgnored), ScreenshotCaptureSessionTests.CapturesAreConsumedOnceAndDuplicateNotificationsAreIgnored),
+            (nameof(ScreenshotCaptureSessionTests.RearmingAndNewerUpdatesInvalidatePendingReads), ScreenshotCaptureSessionTests.RearmingAndNewerUpdatesInvalidatePendingReads),
+            (nameof(ScreenshotCaptureSessionTests.MissingImagesCancelAndSequenceNumbersCanWrap), ScreenshotCaptureSessionTests.MissingImagesCancelAndSequenceNumbersCanWrap),
+            (nameof(ScreenshotCaptureSessionTests.DelayedRenderingConsumesTheFinalSequence), ScreenshotCaptureSessionTests.DelayedRenderingConsumesTheFinalSequence),
+            (nameof(ScreenshotCaptureSessionTests.NativeListenerCanBeDisposedTwiceWithoutReadingTheClipboard), ScreenshotCaptureSessionTests.NativeListenerCanBeDisposedTwiceWithoutReadingTheClipboard),
+            (nameof(ScreenshotCaptureSessionTests.NativeListenerCanBeDisposedAfterItsWindowIsDestroyed), ScreenshotCaptureSessionTests.NativeListenerCanBeDisposedAfterItsWindowIsDestroyed)
         };
         var failures = new List<string>();
 
