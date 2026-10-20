@@ -2,6 +2,26 @@
 
 Windows desktop widget and Spotlight utilities. Requires Windows 10 or later (x64).
 
+## Screenshots
+
+Captured from the native Windows UI with sample device and editor data.
+
+### Desktop widget
+
+![Desktop widget showing the clock, device batteries, and current audio input and output](docs/screenshots/desktop-widget.png)
+
+### Spotlight
+
+![Spotlight searching for JSON formatting and minification tools](docs/screenshots/spotlight.png)
+
+### Settings
+
+![Desktop widget settings with startup controls, opacity sliders, and a live appearance preview](docs/screenshots/settings.png)
+
+### Screenshot editor
+
+![Screenshot editor demonstrating rectangle, arrow, text, and blur annotations](docs/screenshots/screenshot-editor.png)
+
 ## Install
 
 Run `artifacts\installer\WinUtil-Setup-1.0.0-win-x64.exe` after building. Setup installs for the current user, adds a Start menu shortcut, and configures launch at Windows sign-in. The .NET runtime is included; administrator access is not required.
