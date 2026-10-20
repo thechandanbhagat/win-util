@@ -3,11 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="WinUtil command palette"
-        Width="640"
+        Width="620"
         MinHeight="88"
         MaxHeight="480"
         AllowsTransparency="True"
         Background="Transparent"
+        Foreground="{StaticResource TextPrimaryBrush}"
         FontFamily="{StaticResource BodyFont}"
         FontSize="{StaticResource FontSizeBody}"
         ResizeMode="NoResize"
@@ -24,11 +25,10 @@
   <Window.Resources>
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     <sys:Double x:Key="ActionResultsMaximumHeight">288</sys:Double>
-    <sys:Double x:Key="SearchRowHeight">44</sys:Double>
-
+    <sys:Double x:Key="SearchRowHeight">54</sys:Double>
     <Style x:Key="CommandResultItem" TargetType="ListBoxItem">
-      <Setter Property="Margin" Value="0,1" />
-      <Setter Property="Padding" Value="10,8" />
+      <Setter Property="Padding" Value="12,8" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
       <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
       <Setter Property="Template">
         <Setter.Value>
@@ -36,8 +36,6 @@
             <Border x:Name="ResultBorder"
                     Padding="{TemplateBinding Padding}"
                     Background="Transparent"
-                    BorderBrush="Transparent"
-                    BorderThickness="1"
                     CornerRadius="{StaticResource ControlCornerRadius}"
                     SnapsToDevicePixels="True">
               <ContentPresenter />
@@ -47,34 +45,51 @@
                 <Setter TargetName="ResultBorder" Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
               </Trigger>
               <Trigger Property="IsSelected" Value="True">
-                <Setter TargetName="ResultBorder" Property="Background" Value="{StaticResource SurfaceInteractiveBrush}" />
-              </Trigger>
-              <Trigger Property="IsKeyboardFocused" Value="True">
-                <Setter TargetName="ResultBorder" Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                <Setter TargetName="ResultBorder" Property="Background" Value="{StaticResource AccentMutedBrush}" />
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
         </Setter.Value>
       </Setter>
     </Style>
-
     <Style x:Key="KeyHint" TargetType="Border">
       <Setter Property="Padding" Value="5,1" />
       <Setter Property="VerticalAlignment" Value="Center" />
-      <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
       <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="3" />
     </Style>
-
     <Style x:Key="KeyHintText" TargetType="TextBlock" BasedOn="{StaticResource ValueText}">
       <Setter Property="FontSize" Value="10" />
       <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
     </Style>
+    <Style x:Key="ActionGlyph" TargetType="TextBlock">
+      <Setter Property="Width" Value="28" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+      <Setter Property="Text" Value="&#xE8AB;" />
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding Id}" Value="password">
+          <Setter Property="Text" Value="&#xE72E;" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Category}" Value="JSON">
+          <Setter Property="Text" Value="&#xE943;" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Category}" Value="Encoding">
+          <Setter Property="Text" Value="&#xE71B;" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Category}" Value="Case">
+          <Setter Property="Text" Value="&#xE8D2;" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+          <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
   </Window.Resources>
-
   <Border Margin="12"
-          Padding="8"
           Background="{StaticResource SurfaceBrush}"
           BorderBrush="{StaticResource BorderBrush}"
           BorderThickness="1"
@@ -82,32 +97,19 @@
           Effect="{StaticResource ElevatedShadow}"
           SnapsToDevicePixels="True">
     <StackPanel>
-      <Border Height="{StaticResource SearchRowHeight}"
-              Padding="12,0"
-              Background="{StaticResource SurfaceRaisedBrush}"
-              BorderBrush="{StaticResource BorderBrush}"
-              BorderThickness="1"
-              CornerRadius="{StaticResource ControlCornerRadius}">
-        <Border.Style>
-          <Style TargetType="Border">
-            <Style.Triggers>
-              <DataTrigger Binding="{Binding ElementName=CommandTextBox, Path=IsKeyboardFocused}" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-              </DataTrigger>
-            </Style.Triggers>
-          </Style>
-        </Border.Style>
+      <Border Height="{StaticResource SearchRowHeight}" Padding="16,0">
         <Grid>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <TextBlock Margin="0,0,10,0"
+          <TextBlock Margin="0,0,12,0"
                      VerticalAlignment="Center"
-                     FontFamily="{StaticResource MonoFont}"
-                     FontSize="{StaticResource FontSizeSubtitle}"
+                     FontFamily="{StaticResource IconFont}"
+                     FontSize="17"
                      Foreground="{StaticResource AccentBrush}"
-                     Text="&gt;" />
+                     Text="&#xE721;" />
           <Grid Grid.Column="1">
             <TextBox x:Name="CommandTextBox"
                      Padding="0"
@@ -115,16 +117,16 @@
                      Background="Transparent"
                      BorderThickness="0"
                      CaretBrush="{StaticResource AccentBrush}"
-                     FontSize="15"
+                     FontSize="17"
                      Foreground="{StaticResource TextPrimaryBrush}"
                      SelectionBrush="{StaticResource AccentMutedBrush}"
                      Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}"
                      AutomationProperties.Name="Search tools" />
             <TextBlock VerticalAlignment="Center"
                        IsHitTestVisible="False"
-                       FontSize="15"
+                       FontSize="17"
                        Foreground="{StaticResource TextSecondaryBrush}"
-                       Text="Search a tool or type a command">
+                       Text="Search tools and commands">
               <TextBlock.Style>
                 <Style TargetType="TextBlock">
                   <Setter Property="Visibility" Value="Visible" />
@@ -137,120 +139,100 @@
               </TextBlock.Style>
             </TextBlock>
           </Grid>
+          <Border Grid.Column="2" Margin="12,0,0,0" Style="{StaticResource KeyHint}" ToolTip="Escape closes Spotlight">
+            <TextBlock Style="{StaticResource KeyHintText}" Text="Esc" />
+          </Border>
         </Grid>
       </Border>
-
-      <Border Margin="0,6,0,0"
+      <Border Margin="16,0,16,8"
               Padding="10,8"
               Background="{StaticResource SurfaceRaisedBrush}"
               BorderBrush="{StaticResource ErrorBrush}"
-              BorderThickness="1"
-              CornerRadius="{StaticResource ControlCornerRadius}"
+              BorderThickness="2,0,0,0"
               Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}">
         <TextBlock Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}" />
       </Border>
-
-      <Grid Margin="0,6,0,0"
-            Visibility="{Binding HasQuery, Converter={StaticResource BooleanToVisibilityConverter}}">
+      <Grid Visibility="{Binding HasQuery, Converter={StaticResource BooleanToVisibilityConverter}}">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
           <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <Grid>
-          <ListBox x:Name="ActionResultsListBox"
-                   MaxHeight="{StaticResource ActionResultsMaximumHeight}"
-                   Padding="0"
-                   Background="Transparent"
-                   BorderThickness="0"
-                   Foreground="{StaticResource TextPrimaryBrush}"
-                   ItemsSource="{Binding MatchingActions}"
-                   ItemContainerStyle="{StaticResource CommandResultItem}"
-                   SelectedItem="{Binding SelectedAction, Mode=TwoWay}"
-                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                   ScrollViewer.VerticalScrollBarVisibility="Auto"
-                   Visibility="{Binding HasMatches, Converter={StaticResource BooleanToVisibilityConverter}}"
-                   MouseDoubleClick="HandleActionDoubleClick"
-                   AutomationProperties.Name="Matching tools">
-            <ListBox.ItemTemplate>
-              <DataTemplate>
-                <Grid>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                  </Grid.ColumnDefinitions>
-                  <Border Width="24"
-                          Height="24"
-                          Margin="0,0,10,0"
-                          VerticalAlignment="Center"
-                          Background="{StaticResource SurfaceBrush}"
-                          BorderBrush="{StaticResource BorderBrush}"
-                          BorderThickness="1"
-                          CornerRadius="5">
-                    <TextBlock HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               FontFamily="{StaticResource MonoFont}"
-                               FontSize="{StaticResource FontSizeCaption}"
-                               Foreground="{StaticResource TextSecondaryBrush}"
-                               Text="&gt;" />
-                  </Border>
-                  <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Style="{StaticResource BaseText}"
-                               FontWeight="SemiBold"
-                               Text="{Binding Title}"
-                               TextTrimming="CharacterEllipsis"
-                               TextWrapping="NoWrap" />
-                    <TextBlock Margin="0,1,0,0"
-                               Style="{StaticResource CaptionText}"
-                               Text="{Binding Description}"
-                               TextTrimming="CharacterEllipsis"
-                               TextWrapping="NoWrap" />
-                  </StackPanel>
-                  <Border Grid.Column="2"
-                          Margin="12,0,0,0"
-                          Style="{StaticResource KeyHint}">
-                    <Border.Visibility>
-                      <Binding Path="IsSelected"
-                               RelativeSource="{RelativeSource AncestorType=ListBoxItem}"
-                               Converter="{StaticResource BooleanToVisibilityConverter}" />
-                    </Border.Visibility>
-                    <TextBlock Style="{StaticResource KeyHintText}" Text="↵" />
-                  </Border>
-                </Grid>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
-
-          <StackPanel HorizontalAlignment="Center"
-                      Margin="0,16"
-                      Visibility="Collapsed">
-            <StackPanel.Style>
-              <Style TargetType="StackPanel">
-                <Style.Triggers>
-                  <MultiDataTrigger>
-                    <MultiDataTrigger.Conditions>
-                      <Condition Binding="{Binding HasQuery}" Value="True" />
-                      <Condition Binding="{Binding HasMatches}" Value="False" />
-                    </MultiDataTrigger.Conditions>
-                    <Setter Property="Visibility" Value="Visible" />
-                  </MultiDataTrigger>
-                </Style.Triggers>
-              </Style>
-            </StackPanel.Style>
-            <TextBlock HorizontalAlignment="Center"
-                       Style="{StaticResource BaseText}"
-                       FontWeight="SemiBold"
-                       Text="No matching tools" />
-            <TextBlock Margin="0,2,0,0"
-                       HorizontalAlignment="Center"
-                       Style="{StaticResource CaptionText}"
-                       Text="Try uuid, password, jwt, json, base64 or url." />
-          </StackPanel>
-        </Grid>
-
+        <Border Padding="6"
+                BorderBrush="{StaticResource DividerBrush}"
+                BorderThickness="0,1,0,0">
+          <Grid>
+            <ListBox x:Name="ActionResultsListBox"
+                     MaxHeight="{StaticResource ActionResultsMaximumHeight}"
+                     Padding="0"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Foreground="{StaticResource TextPrimaryBrush}"
+                     ItemsSource="{Binding MatchingActions}"
+                     ItemContainerStyle="{StaticResource CommandResultItem}"
+                     SelectedItem="{Binding SelectedAction, Mode=TwoWay}"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     Visibility="{Binding HasMatches, Converter={StaticResource BooleanToVisibilityConverter}}"
+                     SelectionChanged="HandleActionSelectionChanged"
+                     MouseDoubleClick="HandleActionDoubleClick"
+                     AutomationProperties.Name="Matching tools">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Style="{StaticResource ActionGlyph}" ToolTip="{Binding Category}" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                      <TextBlock FontWeight="SemiBold"
+                                 Text="{Binding Title}"
+                                 TextTrimming="CharacterEllipsis"
+                                 TextWrapping="NoWrap" />
+                      <TextBlock Margin="0,2,0,0"
+                                 Style="{StaticResource CaptionText}"
+                                 Text="{Binding Description}"
+                                 TextTrimming="CharacterEllipsis"
+                                 TextWrapping="NoWrap" />
+                    </StackPanel>
+                    <Border Grid.Column="2" Margin="12,0,0,0" Style="{StaticResource KeyHint}">
+                      <Border.Visibility>
+                        <Binding Path="IsSelected"
+                                 RelativeSource="{RelativeSource AncestorType=ListBoxItem}"
+                                 Converter="{StaticResource BooleanToVisibilityConverter}" />
+                      </Border.Visibility>
+                      <TextBlock Style="{StaticResource KeyHintText}" Text="Enter" />
+                    </Border>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <StackPanel x:Name="NoResultsPanel" HorizontalAlignment="Center" Margin="0,20">
+              <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                  <Setter Property="Visibility" Value="Collapsed" />
+                  <Style.Triggers>
+                    <MultiDataTrigger>
+                      <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding HasQuery}" Value="True" />
+                        <Condition Binding="{Binding HasMatches}" Value="False" />
+                      </MultiDataTrigger.Conditions>
+                      <Setter Property="Visibility" Value="Visible" />
+                    </MultiDataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </StackPanel.Style>
+              <TextBlock HorizontalAlignment="Center" FontWeight="SemiBold" Text="No matching tools" />
+              <TextBlock Margin="0,4,0,0"
+                         HorizontalAlignment="Center"
+                         Style="{StaticResource CaptionText}"
+                         Text="Try uuid, password, jwt, json, base64 or url." />
+            </StackPanel>
+          </Grid>
+        </Border>
         <Border Grid.Row="1"
-                Margin="0,6,0,0"
-                Padding="10,8,10,2"
+                Padding="16,8"
                 BorderBrush="{StaticResource DividerBrush}"
                 BorderThickness="0,1,0,0">
           <Grid>
@@ -258,25 +240,8 @@
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock VerticalAlignment="Center"
-                       Style="{StaticResource CaptionText}"
-                       Text="Results are inserted or replace the selected text."
-                       TextTrimming="CharacterEllipsis"
-                       TextWrapping="NoWrap" />
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-              <Border Style="{StaticResource KeyHint}">
-                <TextBlock Style="{StaticResource KeyHintText}" Text="↑↓" />
-              </Border>
-              <TextBlock Margin="4,0,10,0" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Text="navigate" />
-              <Border Style="{StaticResource KeyHint}">
-                <TextBlock Style="{StaticResource KeyHintText}" Text="↵" />
-              </Border>
-              <TextBlock Margin="4,0,10,0" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Text="run" />
-              <Border Style="{StaticResource KeyHint}">
-                <TextBlock Style="{StaticResource KeyHintText}" Text="esc" />
-              </Border>
-              <TextBlock Margin="4,0,0,0" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Text="close" />
-            </StackPanel>
+            <TextBlock Style="{StaticResource CaptionText}" Text="Insert at cursor or replace selection" />
+            <TextBlock Grid.Column="1" Style="{StaticResource CaptionText}" Text="↑ ↓  Navigate" />
           </Grid>
         </Border>
       </Grid>

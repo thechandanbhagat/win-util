@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Threading;
 using WinUtil.Models;
 using WinUtil.Services;
 using WinUtil.ViewModels;
@@ -11,6 +12,8 @@ namespace WinUtil.Tests;
 internal static class SettingsWindowTests
 {
     private const int ExpectedTextToolGroupCount = 3;
+    private const string ClockWithSeconds = "10:24:36";
+    private const string ClockWithoutSeconds = "10:24";
 
     internal static void WindowRendersAShortcutEditorForEveryCatalogAction() => RunOnStaThread(() =>
     {
@@ -203,6 +206,71 @@ internal static class SettingsWindowTests
         };
         ((ShortcutSettingsViewModel)window.DataContext)[SpotlightActionIds.Uuid].Shortcut = editedShortcuts.Uuid;
         return editedShortcuts;
+    }
+
+    internal static void WidgetAppearancePreviewTracksUnsavedSettingsAndIdleState() => RunOnStaThread(() =>
+    {
+        EnsureApplicationResources();
+        using var directory = new TemporaryDirectory();
+        var settingsPath = directory.PathFor("settings.json");
+        var window = CreateStartupSettingsWindow(new SettingsStore(settingsPath), _ => null);
+
+        try
+        {
+            window.Width = window.MinWidth;
+            window.Height = window.MinHeight;
+            window.Show();
+            UpdateBindingsAndLayout(window);
+            TestAssert.Equal(ClockWithSeconds, window.WidgetPreviewTimeText.Text);
+
+            foreach (var opacity in new[] { window.OpacitySlider.Minimum, window.OpacitySlider.Maximum })
+            {
+                window.OpacitySlider.Value = opacity;
+                UpdateBindingsAndLayout(window);
+                TestAssert.Equal(opacity, window.WidgetPreview.Opacity);
+            }
+
+            foreach (var opacity in new[] { window.BackgroundOpacitySlider.Minimum, window.BackgroundOpacitySlider.Maximum })
+            {
+                window.BackgroundOpacitySlider.Value = opacity;
+                UpdateBindingsAndLayout(window);
+                TestAssert.Equal(opacity, window.WidgetPreview.Background.Opacity);
+            }
+
+            window.PreviewIdleCheckBox.IsChecked = true;
+
+            foreach (var opacity in new[] { window.FadedOpacitySlider.Minimum, window.FadedOpacitySlider.Maximum })
+            {
+                window.FadedOpacitySlider.Value = opacity;
+                UpdateBindingsAndLayout(window);
+                TestAssert.Equal(opacity, window.WidgetPreview.Opacity);
+            }
+
+            window.PreviewIdleCheckBox.IsChecked = false;
+            window.ShowSecondsCheckBox.IsChecked = false;
+            UpdateBindingsAndLayout(window);
+            TestAssert.Equal(window.OpacitySlider.Value, window.WidgetPreview.Opacity);
+            TestAssert.Equal(ClockWithoutSeconds, window.WidgetPreviewTimeText.Text);
+            var previewPosition = window.WidgetPreview.TranslatePoint(new Point(), window.SettingsContentScrollViewer);
+            TestAssert.True(previewPosition.X >= 0);
+            TestAssert.True(previewPosition.X + window.WidgetPreview.ActualWidth <= window.SettingsContentScrollViewer.ActualWidth);
+            window.SpotlightNavigationListBox.SelectedIndex = 0;
+            window.SettingsNavigationListBox.SelectedIndex = 0;
+            UpdateBindingsAndLayout(window);
+            TestAssert.Equal(ClockWithoutSeconds, window.WidgetPreviewTimeText.Text);
+            TestAssert.Equal(window.OpacitySlider.Value, window.WidgetPreview.Opacity);
+            TestAssert.False(File.Exists(settingsPath));
+        }
+        finally
+        {
+            window.Close();
+        }
+    });
+
+    private static void UpdateBindingsAndLayout(SettingsWindow window)
+    {
+        window.Dispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
+        window.UpdateLayout();
     }
 
     private static SettingsWindow CreateStartupSettingsWindow(SettingsStore store, Func<bool, string?> tryApplyStartup, Func<SpotlightShortcuts, string?>? tryApplySpotlightShortcuts = null) => new(

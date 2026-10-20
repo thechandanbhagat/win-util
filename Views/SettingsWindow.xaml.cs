@@ -285,6 +285,7 @@ public partial class SettingsWindow : Window
                 SettingsPage.TextTools => TextToolsSettingsPageIndex,
                 _ => -1
             };
+            SettingsContentScrollViewer.ScrollToTop();
         }
         finally
         {

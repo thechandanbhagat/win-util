@@ -79,7 +79,12 @@ internal static class Program
             (nameof(SettingsWindowTests.StartupSettingAppliesAndPersistsWhenSaved), SettingsWindowTests.StartupSettingAppliesAndPersistsWhenSaved),
             (nameof(SettingsWindowTests.StartupSettingShowsAnErrorWhenRegistrationFails), SettingsWindowTests.StartupSettingShowsAnErrorWhenRegistrationFails),
             (nameof(SettingsWindowTests.StartupSettingRollsBackWhenSettingsCannotBeSaved), SettingsWindowTests.StartupSettingRollsBackWhenSettingsCannotBeSaved),
-            (nameof(SettingsWindowTests.FailedSaveReportsShortcutAndStartupRollbackErrors), SettingsWindowTests.FailedSaveReportsShortcutAndStartupRollbackErrors)
+            (nameof(SettingsWindowTests.FailedSaveReportsShortcutAndStartupRollbackErrors), SettingsWindowTests.FailedSaveReportsShortcutAndStartupRollbackErrors),
+            (nameof(SettingsWindowTests.WidgetAppearancePreviewTracksUnsavedSettingsAndIdleState), SettingsWindowTests.WidgetAppearancePreviewTracksUnsavedSettingsAndIdleState),
+            (nameof(NativeWorkbenchWindowTests.WidgetKeepsCompactDeviceRowsAndSavedAppearance), NativeWorkbenchWindowTests.WidgetKeepsCompactDeviceRowsAndSavedAppearance),
+            (nameof(NativeWorkbenchWindowTests.WidgetShowsEmptyBatteryAndUnavailableProviders), NativeWorkbenchWindowTests.WidgetShowsEmptyBatteryAndUnavailableProviders),
+            (nameof(NativeWorkbenchWindowTests.SpotlightStretchesSelectedResultsAndHandlesNoMatches), NativeWorkbenchWindowTests.SpotlightStretchesSelectedResultsAndHandlesNoMatches),
+            (nameof(NativeWorkbenchWindowTests.SpotlightKeepsLongResultListsAndKeyboardSelectionVisible), NativeWorkbenchWindowTests.SpotlightKeepsLongResultListsAndKeyboardSelectionVisible)
         };
         var failures = new List<string>();
 
